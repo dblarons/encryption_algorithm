@@ -1,4 +1,5 @@
 import numpy
+import random
 
 # CARL! Generate p and k randomly between certain vals and let me store them in a .key file
 # TODO: Aaron - store the key in a .key file
@@ -21,16 +22,26 @@ class GeneratePrivateKey():
 
     # For Carl
     def create_private_key(self):
-        pass
         # Up to carl how you want to implement, just make it fairly random
         # return tuple of p, q (so return 2 things)
-
+        prime_to_million = self.generate_prime_number(1000000)
+        prime_to_thousand = self.generate_prime_number(1000)
+        thousand_length = len(prime_to_thousand)
+        private_keys = prime_to_million[thousand_length:]
+        #random.randint(a,b)
+        random_p = random.randint(0, len(private_keys) - 1)
+        random_q = random.randint(0, len(private_keys) - 1)
+        while random_q == random_p:
+            random_q = random.randint(0, len(private_keys) - 1)
+        p = private_keys[random_p]
+        q = private_keys[random_q]
+        return p, q
 
     # Store key in .key file
 
 if __name__ == '__main__':
     a = GeneratePrivateKey()
-    print a.generate_prime_number(1000)
+    print a.create_private_key()
 
 # CARL! Generate the public key from p and k and then generate e
 # TODO: Aaron - store the public key in format (n, e)
