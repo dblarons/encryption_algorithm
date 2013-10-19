@@ -3,7 +3,7 @@ import random
 
 # CARL! Generate p and k randomly between certain vals and let me store them in a .key file
 # TODO: Aaron - store the key in a .key file
-class GeneratePrivateKey():
+class GeneratePrivateKey(object):
 
     def __init__(self):
         pass
@@ -20,7 +20,6 @@ class GeneratePrivateKey():
                 sieve[(k*k+4*k-2*k*(i&1))/3::2*k] = False
         return numpy.r_[2,3,((3*numpy.nonzero(sieve)[0]+1)|1)]
 
-    # For Carl
     def create_private_key(self):
         # Up to carl how you want to implement, just make it fairly random
         # return tuple of p, q (so return 2 things)
@@ -28,30 +27,59 @@ class GeneratePrivateKey():
         prime_to_thousand = self.generate_prime_number(1000)
         thousand_length = len(prime_to_thousand)
         private_keys = prime_to_million[thousand_length:]
-        #random.randint(a,b)
-        random_p = random.randint(0, len(private_keys) - 1)
-        random_q = random.randint(0, len(private_keys) - 1)
-        while random_q == random_p:
-            random_q = random.randint(0, len(private_keys) - 1)
-        p = private_keys[random_p]
-        q = private_keys[random_q]
+        random_int = random.randint(0, len(private_keys))
+        key = private_keys[random_int]
+        return key
+
+    def get_private_key(self):
+        p = self.create_private_key()
+        q = self.create_private_key()
+        while q == p:
+            q = self.create_private_key()
+        p = long(p)
+        q = long(q)
         return p, q
 
-    # Store key in .key file
+    # Aaron - Store key in .key file
 
-if __name__ == '__main__':
-    a = GeneratePrivateKey()
-    print a.create_private_key()
-
-# CARL! Generate the public key from p and k and then generate e
+# CARL! Generate the public key from p and q and then generate e
 # TODO: Aaron - store the public key in format (n, e)
-class GeneratePublicKey():
+class GeneratePublicKey(object):
     def __init__(self, p, q):
         self.p = p
         self.q = q
     # Make text file with key that can be given to message senders
+    def generate_n(self):
+        n = self.p * self.q
+        return n
 
-class EncryptMessage():
+    def generate_phi_n(self):
+        p_less_one = self.p - 1
+        q_less_one = self.q - 1
+        phi_n = p_less_one * q_less_one
+        return phi_n
+
+    def generate_e(self):
+        private_key = GeneratePrivateKey()
+        prime_generator = private_key.create_private_key()
+        e = prime_generator
+        phi_n = self.generate_phi_n()
+        while phi_n % e == 0:
+            e = prime_generator
+        return e
+
+    def get_public_key(self):
+        return self.generate_n(), self.generate_e()
+
+if __name__ == '__main__':
+    b = GeneratePrivateKey()
+    p = b.get_private_key()[0]
+    q = b.get_private_key()[1]
+    a = GeneratePublicKey(p, q)
+    c = a.get_public_key()
+    print c
+
+class EncryptMessage(object):
 
     def __init__(self, public_key):
         self.public_key = public_key
@@ -97,7 +125,7 @@ class EncryptMessage():
         pass
         # Output something
 
-class DecryptMessage():
+class DecryptMessage(object):
     def __init__(self, textfile, private_key):
         self.textfile = textfile
         self.private_key = private_key # this should be an array
