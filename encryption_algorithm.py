@@ -82,11 +82,28 @@ class EncryptMessage(object):
         pass
         # return plain_text
 
-    # For Carl
-    # figure out number and sizes of matrices needed
-    def determine_matrix_sizes(self, text_length):
+    def determine_matrix_sizes(self, text_length, size):
         pass
         # return 2 values (tuple) containing first matrix size and second matrix size
+        if text_length / size == 0:
+            return text_length % size, 0
+        elif text_length % size == 0:
+            return size, 0
+        elif text_length % size == 1
+            if text_length / size == 1:
+                return size + 1, 0
+            else:
+                return size, size + 1
+        else:
+            return size, text_length % size
+
+    def number_of_matrices(self, text_length, size):
+        if text_length % size == 0:
+            return text_length / size
+        elif: text_length % size == 1 and text_length / size == 1:
+            return 1
+        else:
+            return text_length / size + 1
 
     # For Aaron - plain_text and cipher are matrices
     def encrypt_plain_text(self, plain_text, cipher):
@@ -120,7 +137,7 @@ if __name__ == '__main__':
     a = GeneratePublicKey(p, q)
     c = a.get_public_key()
     print c
-    
+
 class DecryptMessage(object):
     def __init__(self, textfile, private_key):
         self.textfile = textfile
