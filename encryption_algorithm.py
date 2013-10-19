@@ -1,7 +1,6 @@
 import numpy
 import random
 
-# CARL! Generate p and k randomly between certain vals and let me store them in a .key file
 # TODO: Aaron - store the key in a .key file
 class GeneratePrivateKey(object):
 
@@ -21,8 +20,6 @@ class GeneratePrivateKey(object):
         return numpy.r_[2,3,((3*numpy.nonzero(sieve)[0]+1)|1)]
 
     def create_private_key(self):
-        # Up to carl how you want to implement, just make it fairly random
-        # return tuple of p, q (so return 2 things)
         prime_to_million = self.generate_prime_number(1000000)
         prime_to_thousand = self.generate_prime_number(1000)
         thousand_length = len(prime_to_thousand)
@@ -42,7 +39,6 @@ class GeneratePrivateKey(object):
 
     # Aaron - Store key in .key file
 
-# CARL! Generate the public key from p and q and then generate e
 # TODO: Aaron - store the public key in format (n, e)
 class GeneratePublicKey(object):
     def __init__(self, p, q):
@@ -70,14 +66,6 @@ class GeneratePublicKey(object):
 
     def get_public_key(self):
         return self.generate_n(), self.generate_e()
-
-if __name__ == '__main__':
-    b = GeneratePrivateKey()
-    p = b.get_private_key()[0]
-    q = b.get_private_key()[1]
-    a = GeneratePublicKey(p, q)
-    c = a.get_public_key()
-    print c
 
 class EncryptMessage(object):
 
@@ -125,6 +113,14 @@ class EncryptMessage(object):
         pass
         # Output something
 
+if __name__ == '__main__':
+    b = GeneratePrivateKey()
+    p = b.get_private_key()[0]
+    q = b.get_private_key()[1]
+    a = GeneratePublicKey(p, q)
+    c = a.get_public_key()
+    print c
+    
 class DecryptMessage(object):
     def __init__(self, textfile, private_key):
         self.textfile = textfile
