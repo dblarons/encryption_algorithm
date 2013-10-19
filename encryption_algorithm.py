@@ -1,5 +1,4 @@
-import numpy
-import random
+import numpy, random
 
 # TODO: Aaron - store the key in a .key file
 class GeneratePrivateKey(object):
@@ -23,7 +22,7 @@ class GeneratePrivateKey(object):
         prime_to_million = self.generate_prime_number(1000000)
         prime_to_thousand = self.generate_prime_number(1000)
         thousand_length = len(prime_to_thousand)
-        private_keys = prime_to_million[thousand_length:]
+        private_keys = prime_to_million[thousand_length:] # Removes prime numbers < 1000
         random_int = random.randint(0, len(private_keys))
         key = private_keys[random_int]
         return key
@@ -33,40 +32,37 @@ class GeneratePrivateKey(object):
         q = self.create_private_key()
         while q == p:
             q = self.create_private_key()
-        p = long(p)
-        q = long(q)
-        return p, q
+        return long(p), long(q) # Return as long so they can be multiplied
 
     # Aaron - Store key in .key file
+    def store_private_key(self):
+        pass
 
 # TODO: Aaron - store the public key in format (n, e)
 class GeneratePublicKey(object):
     def __init__(self, p, q):
         self.p = p
         self.q = q
-    # Make text file with key that can be given to message senders
+
+    # n = p * q
     def generate_n(self):
         n = self.p * self.q
         return n
 
-    def generate_phi_n(self):
-        p_less_one = self.p - 1
-        q_less_one = self.q - 1
-        phi_n = p_less_one * q_less_one
-        return phi_n
-
+    # TODO: make create_private_key method public
     def generate_e(self):
         private_key = GeneratePrivateKey()
         prime_generator = private_key.create_private_key()
         e = prime_generator
-        phi_n = self.generate_phi_n()
+        phi_n = generate_phi_n(self.p, self.q)
         while phi_n % e == 0:
             e = prime_generator
-        e = long(e)
-        return e
+        return long(e)
 
     def get_public_key(self):
         return self.generate_n(), self.generate_e()
+
+    # TODO: Make text file with key that can be given to message senders
 
 class EncryptMessage(object):
 
@@ -85,23 +81,21 @@ class EncryptMessage(object):
 
     def determine_matrix_sizes(self, text_length, size):
         pass
-        if text_length / size == 0:
-            return text_length % size, 0
-        elif text_length % size == 0:
+        if text_length / size == 0:  # Not enough to make one full-size matrix
+            return text_length, 0
+        elif text_length % size == 0:  # One matrix fits all
             return size, 0
-        elif text_length % size == 1
-            if text_length / size == 1:
+        elif text_length % size == 1:
+            if text_length / size == 1:  # ex/ size = 10, length = 11, so one 11x11 matrix
                 return size + 1, 0
-            else:
+            else:                        # ex/ size = 10, length = 21
                 return size, size + 1
         else:
-            return size, text_length % size
+            return size, text_length % size # ex output/ (10, 4)
 
     def number_of_matrices(self, text_length, size):
-        if text_length % size == 0:
+        if text_length % size == 0 or text_length % size == 1:  # ex/ 10 matrices for text_length = 100
             return text_length / size
-        elif: text_length % size == 1 and text_length / size == 1:
-            return 1
         else:
             return text_length / size + 1
 
@@ -111,18 +105,17 @@ class EncryptMessage(object):
         # return encrypted_message
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
-        pass
         pk_encrypted_cipher = []
-        for i = 0, i < len(cipher), i++:
+        # TODO: handle for matrix objects
+        for i in len(cipher):
             m = long(cipher[i])
-            c = m ** e % n
+            c = (m ** e) % n
             pk_encrypted_cipher.append(c)
         return pk_encrypted_cipher
 
     def encrypt_message_with_public_key(self, message, n, e):
-        pass
         pk_encrypted_message = []
-        for i = 0, i < len(message), i++:
+        for i in len(message):
             m = long(message[i])
             c = m ** e % n
             pk_encrypted_message.append(c)
@@ -161,22 +154,15 @@ class DecryptMessage(object):
         pass
         # return tuple of matrix and message
 
-    def generate_phi(self, p, q):
-        pass
-        phi_n = (p - 1) * (q - 1)
-        return phi_n
-
     def generate_d(self, e, phi_n):
-        pass
         a = 1
         while (a * phi_n + 1) % e != 0:
-            a++
+            a += 1
         d = (a * phi_n + 1) / e
         return d
 
     def decrypt_cipher(self, d, n, encrypted_cipher): # Cipher is c in the formula
-        pass
-        unencrypted_cipher = encrypted_cipher ** d % n
+        unencrypted_cipher = (encrypted_cipher ** d) % n
         return unencrypted_cipher
 
     # For Aaron
@@ -199,3 +185,11 @@ class DecryptMessage(object):
     def output_plain_text_message(self):
         pass
         # Output the plain text message to a file
+
+
+# Helper methods
+
+# phi(n) = (p - 1) * (q - 1)
+def generate_phi_n(p, q):
+    phi_n = (p - 1) * (q - 1)
+    return phi_n
