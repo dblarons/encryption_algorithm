@@ -62,6 +62,7 @@ class GeneratePublicKey(object):
         phi_n = self.generate_phi_n()
         while phi_n % e == 0:
             e = prime_generator
+        e = long(e)
         return e
 
     def get_public_key(self):
@@ -84,7 +85,6 @@ class EncryptMessage(object):
 
     def determine_matrix_sizes(self, text_length, size):
         pass
-        # return 2 values (tuple) containing first matrix size and second matrix size
         if text_length / size == 0:
             return text_length % size, 0
         elif text_length % size == 0:
@@ -110,15 +110,23 @@ class EncryptMessage(object):
         pass
         # return encrypted_message
 
-    # For Carl - cipher is an array
     def encrypt_cipher_with_public_key(self, cipher, n, e):
         pass
-        # return pk_encrypted_cipher (as a string)
+        pk_encrypted_cipher = []
+        for i = 0, i < len(cipher), i++:
+            m = long(cipher[i])
+            c = m ** e % n
+            pk_encrypted_cipher.append(c)
+        return pk_encrypted_cipher
 
-    # For Carl - message is an array
     def encrypt_message_with_public_key(self, message, n, e):
         pass
-        # return pk_encrypted_message (as a string)
+        pk_encrypted_message = []
+        for i = 0, i < len(message), i++:
+            m = long(message[i])
+            c = m ** e % n
+            pk_encrypted_message.append(c)
+        return pk_encrypted_message
 
     # For Aaron - 1011__matrix____message__
     def create_encrypted_string(self, matrix_size, cipher, message):
@@ -153,20 +161,23 @@ class DecryptMessage(object):
         pass
         # return tuple of matrix and message
 
-    # For Carl
     def generate_phi(self, p, q):
         pass
-        # return phi_n
+        phi_n = (p - 1) * (q - 1)
+        return phi_n
 
-    # For Carl
     def generate_d(self, e, phi_n):
         pass
-        # return d (for pk encryption)
+        a = 1
+        while (a * phi_n + 1) % e != 0:
+            a++
+        d = (a * phi_n + 1) / e
+        return d
 
-    # For Carl
     def decrypt_cipher(self, d, n, encrypted_cipher): # Cipher is c in the formula
         pass
-        # return unencrypted_cipher
+        unencrypted_cipher = encrypted_cipher ** d % n
+        return unencrypted_cipher
 
     # For Aaron
     def convert_cipher_to_inverted_matrix(self):
@@ -177,6 +188,7 @@ class DecryptMessage(object):
     def decrypt_pk_message(self, d, n, message):
         pass
         # return encrypted_message
+
 
     # For Aaron
     def decrypt_hill_cipher(self, inverted_matrix):
