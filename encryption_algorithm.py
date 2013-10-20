@@ -213,6 +213,7 @@ class DecryptMessage(object):
 
     def separate_matrix_from_message(self, encrypted_message):
         encrypted_array = encrypted_message.split(".")
+        print encrypted_array
         size_one = int(encrypted_array.pop(0))
         size_two = int(encrypted_array.pop(0))
         matrix_length_one = size_one ** 2
