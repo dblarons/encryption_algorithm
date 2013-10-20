@@ -28,10 +28,10 @@ class GeneratePrivateKey(object):
         return key
 
     def get_private_key(self):
-        p = self.create_private_key(1000000)
-        q = self.create_private_key(1000000)
+        p = self.create_private_key(100000)
+        q = self.create_private_key(100000)
         while q == p:
-            q = self.create_private_key(1000000)
+            q = self.create_private_key(100000)
         return long(p), long(q) # Return as long so they can be multiplied
 
     def store_private_key(self, p, q):
@@ -179,7 +179,7 @@ class EncryptMessage(object):
         return pk_encrypted_message
 
     def matrix_to_string(self, send_file, size, cipher):
-        for i in range(size):
+        for i in range(size ** 2):
             send_file = send_file + str(cipher[i]) + "."
         return send_file
 
@@ -213,25 +213,28 @@ class DecryptMessage(object):
 
     def separate_matrix_from_message(self, encrypted_message):
         encrypted_array = encrypted_message.split(".")
-        print encrypted_array
+        encrypted_array.pop()
         size_one = int(encrypted_array.pop(0))
         size_two = int(encrypted_array.pop(0))
         matrix_length_one = size_one ** 2
         matrix_length_two = size_two ** 2
         matrix_one = []
         for i in range(matrix_length_one):
-            matrix_one = encrypted_array.pop(0)
+            matrix_one.append(encrypted_array.pop(0))
         matrix_two = []
         for i in range(matrix_length_two):
-            matrix_two = encrypted_array.pop(0)
+            matrix_two.append(encrypted_array.pop(0))
         message = encrypted_array
+        print matrix_one
+        print matrix_two
         return matrix_one, matrix_two, message, size_one, size_two
 
-    def generate_d(self, e, phi_n):
+    def generate_d(self, phi_n):
         a = 1
-        while (a * phi_n + 1) % e != 0:
+        while (a * phi_n + 1) % self.e != 0:
             a += 1
-        d = (a * phi_n + 1) / e
+        d = (a * phi_n + 1) / self.e
+        print d
         return d
 
     def decrypt_cipher(self, d, n, encrypted_cipher, size): # Cipher is c in the formula
@@ -242,6 +245,7 @@ class DecryptMessage(object):
         for i in range(size):
             matrix1 = unencrypted_cipher[10 * i, 10 * i + 10]
             matrix.append(matrix1)
+        print matrix
         return matrix
 
     def invert_cipher(self, unencrypted_cipher):
@@ -329,7 +333,7 @@ if __name__ == '__main__':
     encrypted_message = dm.read_encrypted_text()
     matrices = dm.separate_matrix_from_message(encrypted_message)
     phi_n = generate_phi_n(p, q)
-    d = dm.generate_d(e, phi_n)
+    d = dm.generate_d(phi_n)
     matrix1 = dm.decrypt_cipher(d, n, matrices[0], matrices[3])
     matrix2 = dm.decrypt_cipher(d, n, matrices[1], matrices[4])
     imatrix1 = dm.invert_cipher(matrix1)
