@@ -1,6 +1,5 @@
 import numpy, random
 
-# TODO: Aaron - store the key in a .key file
 class GeneratePrivateKey(object):
 
     def __init__(self):
@@ -34,11 +33,11 @@ class GeneratePrivateKey(object):
             q = self.create_private_key()
         return long(p), long(q) # Return as long so they can be multiplied
 
-    # Aaron - Store key in .key file
-    def store_private_key(self):
-        pass
+    def store_private_key(self, p, q):
+        f = open("private_key.key", "w")
+        f.write(', '.join(str(p), str(q)))
+        f.close()
 
-# TODO: Aaron - store the public key in format (n, e)
 class GeneratePublicKey(object):
     def __init__(self, p, q):
         self.p = p
@@ -49,7 +48,6 @@ class GeneratePublicKey(object):
         n = self.p * self.q
         return n
 
-    # TODO: make create_private_key method public
     def generate_e(self):
         private_key = GeneratePrivateKey()
         prime_generator = private_key.create_private_key()
@@ -62,22 +60,44 @@ class GeneratePublicKey(object):
     def get_public_key(self):
         return self.generate_n(), self.generate_e()
 
-    # TODO: Make text file with key that can be given to message senders
+    def store_public_key(self, n, e):
+        f = open("public_key.txt", "w")
+        f.write(', '.join(str(n), str(e)))
+        f.close()
 
 class EncryptMessage(object):
 
     def __init__(self, public_key):
         self.public_key = public_key
 
-    # For Aaron
-    def generate_hill_cipher(self):
-        pass
-        # return cipher
+    def generate_hill_cipher_one(self, size):
+        matrix = np.eye(size)
+        for i in range(100):
+            a = random.randint(0, size)
+            b = random.randint(0, size)
+            c = random.randint(1, 101)
+            while b == a:
+                b = random.randint(0, size)
+            matrix[a] += c * matrix[b]
+        return matrix
 
-    # For Aaron
-    def read_plain_text(self):
-        pass
-        # return plain_text
+    def generate_hill_cipher_two(self, size):
+        if size == 0:
+            return none
+        matrix = np.eye(size)      
+        for i in range(100):
+            a = random.randint(0, size)
+            b = random.randint(0, size)
+            c = random.randint(1, 101)
+            while b == a:
+                b = random.randint(0, size)
+            matrix[a] += c * matrix[b]
+        return matrix
+
+    def read_plain_text(self, file):
+        f = open(file, "r")
+        return f.read()
+        f.close()
 
     def determine_matrix_sizes(self, text_length, size):
         pass
@@ -99,15 +119,18 @@ class EncryptMessage(object):
         else:
             return text_length / size + 1
 
-    # For Aaron - plain_text and cipher are matrices
     def encrypt_plain_text(self, plain_text, cipher):
-        pass
-        # return encrypted_message
+        size = len(cipher[0])
+        loops = len(plain_text) / size
+        encrypted_message = []
+        for i in range(loops):
+            array = plain_text.pop(0, size)
+            encrypted_message.append(dot(array, cipher))
+        return encrypted_message
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
         pk_encrypted_cipher = []
-        # TODO: handle for matrix objects
-        for i in len(cipher):
+        for i in len(cipher[0]):
             m = long(cipher[i])
             c = (m ** e) % n
             pk_encrypted_cipher.append(c)
@@ -121,15 +144,25 @@ class EncryptMessage(object):
             pk_encrypted_message.append(c)
         return pk_encrypted_message
 
-    # For Aaron - 1011__matrix____message__
-    def create_encrypted_string(self, matrix_size, cipher, message):
-        pass
-        # return send_file (need better name)
+    def matrix_to_string(self, send_file, size, cipher):
+        for i in range(size):
+            array = cipher[i]
+            for j in range(size):
+                send_file = send_file + str(array[j]) + "."
+        return send_file
 
-    # For Aaron - write it to a file or something
-    def output_encrypted_message(self):
-        pass
-        # Output something
+    def create_encrypted_string(self, size_one, size_two, cipher_one, cipher_two, message):
+        send_file = str(size_one) + str(size_two) + "."
+        send_file = self.matrix_to_string(send_file, size_one, cipher_one)
+        send_file = self.matrix_to_string(send_file, size_two, cipher_two)
+        for i in range(len(message)):
+            send_file = send_file + str(message[i]) + "."
+        return send_file
+
+    def output_encrypted_message(self, encrypted_string):
+        f = open("encrypted_message.txt", "w")
+        f.write(encrypted_string)
+        f.close()
 
 if __name__ == '__main__':
     b = GeneratePrivateKey()
@@ -144,15 +177,25 @@ class DecryptMessage(object):
         self.textfile = textfile
         self.private_key = private_key # this should be an array
 
-    # For Aaron
-    def read_encrypted_text(self):
-        pass
-        # return text
+    def read_encrypted_text(self, encrypted_text):
+        f = open(encrypted_text, "r")
+        return f.read()
+        f.close()
 
-    # For Aaron
-    def separate_matrix_from_message(self):
-        pass
-        # return tuple of matrix and message
+    def separate_matrix_from_message(self, encrypted_message):
+        encrypted_array = encrypted_message.split(".")
+        size_one = int(encrypted_array.pop(0))
+        size_two = int(encrypted_array.pop(1))
+        matrix_length_one = size_one ** 2
+        matrix_length_two = size_two ** 2
+        matrix_one = []
+        for i in range(matrix_length_one):
+            matrix_one = encrypted_array.pop(i)
+        matrix_two = []
+        for i in range(matrix_length_two):
+            matrix_two = encrypted_array.pop(i)
+        message = encrypted_array
+        return matrix_one, matrix_two, message
 
     def generate_d(self, e, phi_n):
         a = 1
@@ -165,27 +208,31 @@ class DecryptMessage(object):
         unencrypted_cipher = (encrypted_cipher ** d) % n
         return unencrypted_cipher
 
-    # For Aaron
-    def convert_cipher_to_inverted_matrix(self):
-        pass
-        # return inverted_matrix
+    def convert_cipher_to_inverted_matrix(self, unencrypted_cipher):
+        cipher = unencrypted_cipher
+        return matrix(cipher).I
 
-    # For Carl
     def decrypt_pk_message(self, d, n, message):
-        pass
-        # return encrypted_message
+        decrypted_message = []
+        for i in range(len(message)):
+            decrypted_message.append(message[i] ** d % n)
+        return decrypted_message
 
+    def decrypt_hill_cipher(self, inverted_matrix, decrypted_message):
+        size = len(inverted_matrix[0])
+        message = ""
+        loops = len(decrypted_message) / size
+        for i in range(loops):
+            array = dot(decrypted_message[i], inverted_matrix)
+            for j in range(size):
+                message = message + str(array[j])
+        return message
 
-    # For Aaron
-    def decrypt_hill_cipher(self, inverted_matrix):
-        pass
-        # return decrypted_message
-
-    # For Aaron
-    def output_plain_text_message(self):
-        pass
-        # Output the plain text message to a file
-
+    def output_plain_text_message(self, message1, message2):
+        message = message1 + message2
+        f = open("decrypted_message.txt", "w")
+        f.write(message)
+        f.close()
 
 # Helper methods
 
