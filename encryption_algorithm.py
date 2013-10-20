@@ -34,8 +34,9 @@ class GeneratePrivateKey(object):
         return long(p), long(q) # Return as long so they can be multiplied
 
     def store_private_key(self, p, q):
-        f = open("private_key.key", "w")
-        f.write(', '.join(str(p), str(q)))
+        a = [str(p), str(q)]
+        f = open(".key", "w")
+        f.write(', '.join(a))
         f.close()
 
 class GeneratePublicKey(object):
@@ -61,8 +62,9 @@ class GeneratePublicKey(object):
         return self.generate_n(), self.generate_e()
 
     def store_public_key(self, n, e):
+        a = [str(n), str(e)]
         f = open("public_key.txt", "w")
-        f.write(', '.join(str(n), str(e)))
+        f.write(', '.join(a))
         f.close()
 
 class EncryptMessage(object):
@@ -119,7 +121,16 @@ class EncryptMessage(object):
         else:
             return text_length / size + 1
 
-    def encrypt_plain_text(self, plain_text, cipher):
+    def plain_text_to_number_text(self, plain_text):
+        alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+            's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            '.', ',', ';', '/', '?', '!', ':', '\'', '\"', '(', ')', '-', '_', '&', '%', '$', '#', '@',
+            '[', ']', '{', '}', ' ', '\n', '*', '<', '>']
+
+    def encrypt_plain_text(self, number_text, cipher):
         size = len(cipher[0])
         loops = len(plain_text) / size
         encrypted_message = []
@@ -164,13 +175,7 @@ class EncryptMessage(object):
         f.write(encrypted_string)
         f.close()
 
-if __name__ == '__main__':
-    b = GeneratePrivateKey()
-    p = b.get_private_key()[0]
-    q = b.get_private_key()[1]
-    a = GeneratePublicKey(p, q)
-    c = a.get_public_key()
-    print c
+
 
 class DecryptMessage(object):
     def __init__(self, textfile, private_key):
@@ -240,3 +245,14 @@ class DecryptMessage(object):
 def generate_phi_n(p, q):
     phi_n = (p - 1) * (q - 1)
     return phi_n
+
+if __name__ == '__main__':
+    a = GeneratePrivateKey()
+    p, q = a.get_private_key()
+    a.store_private_key(p, q)
+    print str(p) + ", " + str(q)
+
+    b = GeneratePublicKey(p, q)
+    n, e = b.get_public_key()
+    b.store_public_key(n, e)
+    print str(n) + ", " + str(e)
