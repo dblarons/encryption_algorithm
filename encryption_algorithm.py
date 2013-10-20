@@ -19,7 +19,7 @@ class GeneratePrivateKey(object):
 
     def create_private_key(self, n):
         prime_to_n = self.generate_prime_number(n)
-        prime_to_thousand = self.generate_prime_number(1000)
+        prime_to_thousand = self.generate_prime_number(n / 10)
         thousand_length = len(prime_to_thousand)
         n_length = len(prime_to_n)
         private_keys = prime_to_n[thousand_length:n_length] # Removes prime numbers < 1000
@@ -52,7 +52,7 @@ class GeneratePublicKey(object):
 
     def generate_e(self):
         private_key = GeneratePrivateKey()
-        prime_generator = private_key.create_private_key(10000)
+        prime_generator = private_key.create_private_key(1000)
         e = prime_generator
         phi_n = generate_phi_n(self.p, self.q)
         while phi_n % e == 0:
