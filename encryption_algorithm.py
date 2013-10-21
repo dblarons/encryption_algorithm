@@ -17,7 +17,7 @@ class GeneratePrivateKey(object):
                 sieve[(k*k+4*k-2*k*(i&1))/3::2*k] = False
         return numpy.r_[2,3,((3*numpy.nonzero(sieve)[0]+1)|1)]
 
-    def create_private_key(self):
+    def create_private_key(self, n):
         # prime_to_n = self.generate_prime_number(n)
         # prime_to_thousand = self.generate_prime_number(n / 10)
         # thousand_length = len(prime_to_thousand)
@@ -25,15 +25,15 @@ class GeneratePrivateKey(object):
         # private_keys = prime_to_n[thousand_length:n_length] # Removes prime numbers < 1000
         # random_int = random.randint(0, len(private_keys))
         # key = private_keys[random_int]
-        primes = self.generate_prime_number(100)
+        primes = self.generate_prime_number(n)
         key = primes[random.randint(0, (len(primes) - 1))]
         return key
 
     def get_private_key(self):
-        p = self.create_private_key()
-        q = self.create_private_key()
+        p = self.create_private_key(1000)
+        q = self.create_private_key(1000)
         while q == p:
-            q = self.create_private_key()
+            q = self.create_private_key(1000)
         return long(p), long(q) # Return as long so they can be multiplied
 
     def store_private_key(self, p, q):
@@ -54,11 +54,10 @@ class GeneratePublicKey(object):
 
     def generate_e(self):
         private_key = GeneratePrivateKey()
-        prime_generator = private_key.create_private_key()
-        e = prime_generator
+        e = private_key.create_private_key(100)
         phi_n = generate_phi_n(self.p, self.q)
         while phi_n % e == 0:
-            e = prime_generator
+            e = private_key.create_private_key(100)
         return long(e)
 
     def get_public_key(self):
@@ -78,26 +77,41 @@ class EncryptMessage(object):
 
     def generate_hill_cipher_one(self, size):
         matrix = numpy.eye(size)
-        for i in range(100):
-            a = random.randint(0, size - 1)
-            b = random.randint(0, size - 1)
-            c = random.randint(1, 100)
-            while b == a:
+        matrix[0] = matrix[0] * 2
+        while numpy.linalg.det(matrix) != 1 and numpy.linalg.det(matrix) != -1:
+            matrix = numpy.eye(size)
+            for i in range(20):
+                a = random.randint(0, size - 1)
                 b = random.randint(0, size - 1)
-            matrix[a] = matrix[a] + c * matrix[b]
+                while b == a:
+                    b = random.randint(0, size - 1)
+                matrix[a] = matrix[a] + matrix[b]
+            if numpy.linalg.det(matrix) == 1 or numpy.linalg.det(matrix) == -1:
+                break
         return matrix
 
     def generate_hill_cipher_two(self, size):
         if size == 0:
             return [[0]]
-        matrix = numpy.eye(size)      
-        for i in range(100):
-            a = random.randint(0, size - 1)
-            b = random.randint(0, size - 1)
-            c = random.randint(1, 10)
-            while b == a:
+        matrix = numpy.eye(size)
+        matrix[0] = matrix[0] * 2
+        while numpy.linalg.det(matrix) != 1 and numpy.linalg.det(matrix) != -1:
+            matrix = numpy.eye(size)
+            for i in range(20):
+                a = random.randint(0, size - 1)
                 b = random.randint(0, size - 1)
-            matrix[a] = matrix[a] + c * matrix[b]
+                c = random.randint(1, 5)
+                while b == a:
+                    b = random.randint(0, size - 1)
+                matrix[a] = matrix[a] + matrix[b]
+            for i in range(len(numpy.array(matrix))):
+                matrix = numpy.array(matrix)
+                for j in range(len(matrix[i])):
+                    if matrix[i][j] < (1 ** -10) and matrix[i][j] > (-1 ** -10) and matrix[i][j] != 0:
+                        matrix[i][j] = 0
+                if numpy.linalg.det(matrix) == 1 or numpy.linalg.det(matrix) == -1:
+                    print numpy.matrix(matrix).I
+                    break
         return matrix
 
     def read_plain_text(self, file):
@@ -160,7 +174,6 @@ class EncryptMessage(object):
         return encrypted_message
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
-        print cipher
         if not cipher[0][0] == 0:
             pk_encrypted_cipher = []
             for i in range(len(cipher[0])):
@@ -224,10 +237,10 @@ class DecryptMessage(object):
         matrix_length_two = size_two ** 2
         matrix_one = []
         for i in range(matrix_length_one):
-            matrix_one.append(encrypted_array.pop(0))
+            matrix_one.append(long(encrypted_array.pop(0)))
         matrix_two = []
         for i in range(matrix_length_two):
-            matrix_two.append(encrypted_array.pop(0))
+            matrix_two.append(long(encrypted_array.pop(0)))
         message = encrypted_array
         return matrix_one, matrix_two, message, size_one, size_two
 
@@ -241,19 +254,23 @@ class DecryptMessage(object):
     def decrypt_cipher(self, d, n, encrypted_cipher, size): # Cipher is c in the formula
         unencrypted_cipher = []
         for i in range(len(encrypted_cipher)):
-            unencrypted_cipher.append((long(encrypted_cipher[i]) ** d) % n)
+            unencrypted_cipher.append((encrypted_cipher[i] ** d) % n)
         matrix = []
         for i in range(size):
             matrix1 = []
             for j in range(size):
-                matrix1.append(unencrypted_cipher[j])
+                matrix1.append(unencrypted_cipher.pop(0))
             matrix.append(matrix1)
-        print matrix
         return matrix
 
     def invert_cipher(self, unencrypted_cipher):
         if len(unencrypted_cipher) != 1:
-            return numpy.matrix(unencrypted_cipher).I
+            matrix = numpy.matrix(unencrypted_cipher).I
+            for i in range(len(numpy.array(matrix))):
+                matrix = numpy.array(matrix)
+                for j in range(len(matrix[i])):
+                    matrix[i][j] = matrix[i][j] - matrix[i][j] % 1
+            return numpy.matrix(matrix).I
         else:
             return [0]
 
@@ -264,23 +281,26 @@ class DecryptMessage(object):
         return decrypted_message
 
     def decrypt_hill_cipher(self, inverted_matrix1, inverted_matrix2, decrypted_message):
-        size = len(inverted_matrix1[0])
+        # print inverted_matrix1
+        size = len(inverted_matrix1)
         message = []
         loops = len(decrypted_message) / size
         for i in range(loops):
             array = []
-            for j in range(size):
+            for j in range(len(inverted_matrix1)):
                 array.append(decrypted_message.pop(0))
             message0 = numpy.dot(array, inverted_matrix1)
+            message0 = numpy.array(message0)
             for j in range(size):
-                message.append(message0[j])
-        size = len(inverted_matrix2[0])
+                message.append(message0[0][j])
+        size = len(inverted_matrix2)
         array1 = []
         for i in range(size):
             array1.append(decrypted_message.pop(0))
         array2 = numpy.dot(array1, inverted_matrix2)
+        array2 = numpy.array(array2)
         for i in range(size):
-            message.append(array2[i])
+            message.append(array2[0][i])
         return message
 
     def message_to_plain_text(self, message):
@@ -293,7 +313,7 @@ class DecryptMessage(object):
             '[', ']', '{', '}', ' ', '\n', '*', '<', '>']
         plain_text = ""
         for i in range(len(message)):
-                plain_text = plain_text + alphabet[message[i]]
+                plain_text = plain_text + alphabet[(int(message[i]) % 89)]
         return plain_text
 
     def output_plain_text_message(self, message):
@@ -323,8 +343,8 @@ if __name__ == '__main__':
     file1 = c.read_plain_text("test.txt")
     number_text = c.plain_text_to_number_text(file1)
     text_length = len(number_text)
-    number_of_matrices = c.number_of_matrices(text_length, 10)
-    sizes = c.determine_matrix_sizes(len(file1), 10)
+    number_of_matrices = c.number_of_matrices(text_length, 5)
+    sizes = c.determine_matrix_sizes(len(file1), 5)
     cipher_one = c.generate_hill_cipher_one(sizes[0])
     cipher_two = c.generate_hill_cipher_two(sizes[1])
     cipher_text = c.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
