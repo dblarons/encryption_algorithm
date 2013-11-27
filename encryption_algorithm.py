@@ -18,13 +18,6 @@ class GeneratePrivateKey(object):
         return numpy.r_[2,3,((3*numpy.nonzero(sieve)[0]+1)|1)]
 
     def create_private_key(self, n):
-        # prime_to_n = self.generate_prime_number(n)
-        # prime_to_thousand = self.generate_prime_number(n / 10)
-        # thousand_length = len(prime_to_thousand)
-        # n_length = len(prime_to_n)
-        # private_keys = prime_to_n[thousand_length:n_length] # Removes prime numbers < 1000
-        # random_int = random.randint(0, len(private_keys))
-        # key = private_keys[random_int]
         primes = self.generate_prime_number(n)
         key = primes[random.randint(0, (len(primes) - 1))]
         return key
@@ -280,7 +273,6 @@ class DecryptMessage(object):
         return decrypted_message
 
     def decrypt_hill_cipher(self, inverted_matrix1, inverted_matrix2, decrypted_message):
-        # print inverted_matrix1
         size = len(inverted_matrix1)
         message = []
 
@@ -297,7 +289,7 @@ class DecryptMessage(object):
             message0 = numpy.dot(array, inverted_matrix1) # unencrypt this portion of the message
             message0 = numpy.array(message0)
             for j in range(size):
-                message.append(message0[0][j])
+                message.append(message0[j])
 
         # decrypt the "leftovers"
         size = len(inverted_matrix2)
@@ -307,7 +299,7 @@ class DecryptMessage(object):
         array2 = numpy.dot(array1, inverted_matrix2)
         array2 = numpy.array(array2)
         for i in range(size):
-            message.append(array2[0][i])
+            message.append(array2[i])
         return message
 
     def message_to_plain_text(self, message):
