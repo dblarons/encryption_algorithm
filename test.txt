@@ -1,5 +1,0 @@
-abcdefghijklmnopqrstuvwxyz
-12345678910
-**
-
-Hello, my name is Aaron Smith and this is my encrypted message. I just hope that this works!!! Crossing my fingers here.
