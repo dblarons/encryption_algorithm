@@ -93,25 +93,21 @@ class EncryptMessage(object):
     def generate_hill_cipher_two(self, size):
         if size == 0:
             return [[0]]
+
         matrix = numpy.eye(size)
         matrix[0] = matrix[0] * 2
-        while numpy.linalg.det(matrix) != 1 and numpy.linalg.det(matrix) != -1:
+
+        # generate new matrices until one is invertible
+        while numpy.linalg.det(matrix) != 1.0 and numpy.linalg.det(matrix) != -1.0:
             matrix = numpy.eye(size)
             for i in range(20):
                 a = random.randint(0, size - 1)
                 b = random.randint(0, size - 1)
-                c = random.randint(1, 5)
+                # don't add multiples of one row to itself
                 while b == a:
                     b = random.randint(0, size - 1)
                 matrix[a] = matrix[a] + matrix[b]
-            for i in range(len(numpy.array(matrix))):
-                matrix = numpy.array(matrix)
-                for j in range(len(matrix[i])):
-                    if matrix[i][j] < (1 ** -10) and matrix[i][j] > (-1 ** -10) and matrix[i][j] != 0:
-                        matrix[i][j] = 0
-                if numpy.linalg.det(matrix) == 1 or numpy.linalg.det(matrix) == -1:
-                    print numpy.matrix(matrix).I
-                    break
+
         return matrix
 
     def read_plain_text(self, file):
@@ -164,13 +160,16 @@ class EncryptMessage(object):
             array2 = numpy.dot(array, cipher1)
             for i in range(len(array2)):
                 encrypted_message.append(array2[i])
-        if not cipher2[0][0] == 0:
+        try:
+            cipher2[0][1] # This is what we're 'trying.' If this doesn't exist, it won't work.
             array3 = []
             for i in range(len(number_text)):
                 array3.append(number_text.pop(0))
             array4 = numpy.dot(array3, cipher2)
             for i in range(len(array4)):
                 encrypted_message.append(array4[i])
+        except IndexError:
+            pass
         return encrypted_message
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
@@ -269,8 +268,8 @@ class DecryptMessage(object):
             for i in range(len(numpy.array(matrix))):
                 matrix = numpy.array(matrix)
                 for j in range(len(matrix[i])):
-                    matrix[i][j] = matrix[i][j] - matrix[i][j] % 1
-            return numpy.matrix(matrix).I
+                    matrix[i][j] = round(matrix[i][j])
+            return matrix
         else:
             return [0]
 
@@ -284,15 +283,23 @@ class DecryptMessage(object):
         # print inverted_matrix1
         size = len(inverted_matrix1)
         message = []
-        loops = len(decrypted_message) / size
+
+        # if the second matrix needs to be used, use the first matrix one less time
+        if len(inverted_matrix2) > 1:
+            loops = len(decrypted_message) / size - 1
+        elif len(inverted_matrix2) == 1:
+            loops = len(decrypted_message) / size
+
         for i in range(loops):
             array = []
             for j in range(len(inverted_matrix1)):
                 array.append(decrypted_message.pop(0))
-            message0 = numpy.dot(array, inverted_matrix1)
+            message0 = numpy.dot(array, inverted_matrix1) # unencrypt this portion of the message
             message0 = numpy.array(message0)
             for j in range(size):
                 message.append(message0[0][j])
+
+        # decrypt the "leftovers"
         size = len(inverted_matrix2)
         array1 = []
         for i in range(size):
@@ -332,12 +339,10 @@ if __name__ == '__main__':
     a = GeneratePrivateKey()
     p, q = a.get_private_key()
     a.store_private_key(p, q)
-    print str(p) + ", " + str(q)
 
     b = GeneratePublicKey(p, q)
     n, e = b.get_public_key()
     b.store_public_key(n, e)
-    print str(n) + ", " + str(e)
 
     c = EncryptMessage(n, e)
     file1 = c.read_plain_text("test.txt")
@@ -356,7 +361,7 @@ if __name__ == '__main__':
 
     dm = DecryptMessage("encrypted_message.txt", p, q, e)
     encrypted_message = dm.read_encrypted_text()
-    matrices = dm.separate_matrix_from_message(encrypted_message)
+    matrices = dm.separate_matrix_from_message(encrypted_message) # (matrix1, matrix2, size1, size2)
     phi_n = generate_phi_n(p, q)
     d = dm.generate_d(phi_n)
     matrix1 = dm.decrypt_cipher(d, n, matrices[0], matrices[3])
