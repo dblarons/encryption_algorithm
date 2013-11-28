@@ -1,4 +1,4 @@
-import numpy, random
+import numpy, random, json
 
 ''' PrivateKey
     
@@ -165,13 +165,7 @@ class EncryptMessage(object):
             return text_length / size
 
     def plain_text_to_number_text(self, plain_text):
-        alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-            's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-            '.', ',', ';', '/', '?', '!', ':', '\'', '\"', '(', ')', '-', '_', '&', '%', '$', '#', '@',
-            '[', ']', '{', '}', ' ', '\n', '*', '<', '>']
+        alphabet = get_alphabet()
         number_text = []
         for i in range(len(plain_text)):
             if plain_text[i] in alphabet:
@@ -340,13 +334,7 @@ class DecryptMessage(object):
         return message
 
     def message_to_plain_text(self, message):
-        alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-            's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-            '.', ',', ';', '/', '?', '!', ':', '\'', '\"', '(', ')', '-', '_', '&', '%', '$', '#', '@',
-            '[', ']', '{', '}', ' ', '\n', '*', '<', '>']
+        alphabet = get_alphabet()
         plain_text = ""
         for i in range(len(message)):
                 plain_text = plain_text + alphabet[(int(message[i]) % 89)]
@@ -363,6 +351,10 @@ class DecryptMessage(object):
 def generate_phi_n(p, q):
     phi_n = (p - 1) * (q - 1)
     return phi_n
+
+# Get the supported alphabet from its json file and make into array
+def get_alphabet():
+    return json.loads(open('alphabet.json', 'r').read())
 
 if __name__ == '__main__':
     private_key = PrivateKey()
