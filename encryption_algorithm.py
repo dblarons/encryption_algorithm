@@ -1,6 +1,14 @@
 import numpy, random
 
-class GeneratePrivateKey(object):
+''' PrivateKey
+    
+    PrivateKey takes no parameters for initialization, but p and q instance 
+    variables are created on a PrivateKey object when a key is created or 
+    retrieved. p and q are the private key pair and can be stored or 
+    regenerated.
+
+'''
+class PrivateKey(object):
 
     def __init__(self):
         pass
@@ -22,44 +30,73 @@ class GeneratePrivateKey(object):
         key = primes[random.randint(0, (len(primes) - 1))]
         return key
 
-    def get_private_key(self):
-        p = self.create_private_key(1000)
-        q = self.create_private_key(1000)
-        while q == p:
-            q = self.create_private_key(1000)
-        return long(p), long(q) # Return as long so they can be multiplied
+    def new_private_key_pair(self):
+        self.p = self.create_private_key(1000)
+        self.q = self.create_private_key(1000)
+        while self.q == self.p:
+            self.q = self.create_private_key(1000)
 
-    def store_private_key(self, p, q):
-        a = [str(p), str(q)]
-        f = open("private_key.txt", "w")
-        f.write(', '.join(a))
+    def store_private_key(self, filepath):
+        if not self.p or not self.q:
+            self.new_private_key_pair()
+        a = [str(self.p), str(self.q)]
+        f = open(filepath, "w+") # creates a new file if none is found
+        f.write('.'.join(a))
         f.close()
 
-class GeneratePublicKey(object):
+    def retrieve_stored_key(self, filepath):
+        f = open(filepath, "r")
+        keychain = f.read()
+        self.p = int(keychain.partition(".")[0])
+        self.q = int(keychain.partition(".")[2])
+        f.close()
+
+
+''' PublicKey 
+
+    PublicKey is initialized with a private key pair and generates a public
+    key from that private key pair. It includes methods for storing and 
+    retrieving keys. n and e are the public key pair
+
+'''
+class PublicKey(object):
     def __init__(self, p, q):
         self.p = p
         self.q = q
 
     # n = p * q
     def generate_n(self):
-        n = self.p * self.q
-        return n
+        self.n = self.p * self.q
 
     def generate_e(self):
-        private_key = GeneratePrivateKey()
+        private_key = PrivateKey()
         e = private_key.create_private_key(100)
         phi_n = generate_phi_n(self.p, self.q)
         while phi_n % e == 0:
             e = private_key.create_private_key(100)
-        return long(e)
+        self.e = long(e)
 
-    def get_public_key(self):
-        return self.generate_n(), self.generate_e()
+    def new_public_key_pair(self):
+        self.generate_n()
+        self.generate_e()
 
-    def store_public_key(self, n, e):
-        a = [str(n), str(e)]
-        f = open("public_key.txt", "w")
-        f.write(', '.join(a))
+    # stores public key in the format n.e
+    def store_public_key(self, filepath):
+        if not self.n:
+            self.generate_n()
+        if not self.e:
+            self.generate_e()
+
+        a = [str(self.n), str(self.e)]
+        f = open(filepath, 'w+') # creates a new file if none is found
+        f.write('.'.join(a))
+        f.close()
+
+    def retrieve_stored_key(self, filepath):
+        f = open(filepath, "r")
+        keychain = f.read()
+        self.n = int(keychain.partition(".")[0])
+        self.e = int(keychain.partition(".")[2])
         f.close()
 
 class EncryptMessage(object):
@@ -328,15 +365,15 @@ def generate_phi_n(p, q):
     return phi_n
 
 if __name__ == '__main__':
-    a = GeneratePrivateKey()
-    p, q = a.get_private_key()
-    a.store_private_key(p, q)
+    private_key = PrivateKey()
+    private_key.new_private_key_pair()
+    private_key.store_private_key('private_key.txt')
 
-    b = GeneratePublicKey(p, q)
-    n, e = b.get_public_key()
-    b.store_public_key(n, e)
+    public_key = PublicKey(private_key.p, private_key.q)
+    public_key.new_public_key_pair()
+    public_key.store_public_key('public_key.txt')
 
-    c = EncryptMessage(n, e)
+    c = EncryptMessage(public_key.n, public_key.e)
     file1 = c.read_plain_text("test.txt")
     number_text = c.plain_text_to_number_text(file1)
     text_length = len(number_text)
@@ -345,22 +382,22 @@ if __name__ == '__main__':
     cipher_one = c.generate_hill_cipher_one(sizes[0])
     cipher_two = c.generate_hill_cipher_two(sizes[1])
     cipher_text = c.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
-    encrypted_cipher_one = c.encrypt_cipher_with_public_key(cipher_one, n, e)
-    encrypted_cipher_two = c.encrypt_cipher_with_public_key(cipher_two, n, e)
-    encrypted_message = c.encrypt_message_with_public_key(cipher_text, n, e)
+    encrypted_cipher_one = c.encrypt_cipher_with_public_key(cipher_one, public_key.n, public_key.e)
+    encrypted_cipher_two = c.encrypt_cipher_with_public_key(cipher_two, public_key.n, public_key.e)
+    encrypted_message = c.encrypt_message_with_public_key(cipher_text, public_key.n, public_key.e)
     string = c.create_encrypted_string(sizes[0], sizes[1], encrypted_cipher_one, encrypted_cipher_two, encrypted_message)
     c.output_encrypted_message(string)
 
-    dm = DecryptMessage("encrypted_message.txt", p, q, e)
+    dm = DecryptMessage("encrypted_message.txt", private_key.p, private_key.q, public_key.e)
     encrypted_message = dm.read_encrypted_text()
     matrices = dm.separate_matrix_from_message(encrypted_message) # (matrix1, matrix2, size1, size2)
-    phi_n = generate_phi_n(p, q)
+    phi_n = generate_phi_n(private_key.p, private_key.q)
     d = dm.generate_d(phi_n)
-    matrix1 = dm.decrypt_cipher(d, n, matrices[0], matrices[3])
-    matrix2 = dm.decrypt_cipher(d, n, matrices[1], matrices[4])
+    matrix1 = dm.decrypt_cipher(d, public_key.n, matrices[0], matrices[3])
+    matrix2 = dm.decrypt_cipher(d, public_key.n, matrices[1], matrices[4])
     imatrix1 = dm.invert_cipher(matrix1)
     imatrix2 = dm.invert_cipher(matrix2)
-    decrypted_message = dm.decrypt_pk_message(d, n, matrices[2])
+    decrypted_message = dm.decrypt_pk_message(d, public_key.n, matrices[2])
     decrypted_hill_cipher = dm.decrypt_hill_cipher(imatrix1, imatrix2, decrypted_message)
     the_message = dm.message_to_plain_text(decrypted_hill_cipher)
     dm.output_plain_text_message(the_message)

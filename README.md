@@ -27,6 +27,43 @@ When the encrypted message is received by its intended party, the first layer of
 
 #### Usage
 
-Encryption/decryption algorithm written in Python. Uses a Hill Cipher and public key encryption.
 
-To encrypt a file: 
+###### Retrieve a stored private key
+
+`filename = 'mypath/private_key.txt'`
+
+`private_key = PrivateKey()`
+
+`private_key.retrieve_stored_key(filename)`
+
+
+###### Generate and store a private key
+
+`private_key = PrivateKey()`
+
+`private_key.new_private_key_pair()`
+
+`private_key.store_private_key('mypath/private_key.txt')`
+
+
+###### Retrieve a stored private key
+
+`private_key = PublicKey()`
+
+`private_key.retrieve_stored_key('mypath/private_key.txt')`
+
+
+###### Generate and store a public key
+
+`public_key = PublicKey(private_key.p, private_key.q)`
+
+`public_key.new_public_key_pair()`
+
+`public_key.store_public_key('mypath/public_key.txt')`
+
+
+###### Retrieve a stored public key
+
+`public_key = PublicKey(private_key.p, private_key.q)`
+
+`public_key.retrieve_stored_key('mypath/public_key.txt')`
