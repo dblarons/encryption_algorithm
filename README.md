@@ -11,22 +11,23 @@ At this point in time, this encryption algorithm is not intended to be used in a
 
 #### Licensing
 
-This code is open-sourced under the MIT License and can be modified or packaged with another application according to the terms of the LICENSE file included in this github repository.
+This code is open-sourced under the MIT License and can be modified or re-packaged with another application according to the terms of the LICENSE file included in this Github repository.
 
 #### How does it work?
 
 ###### Encryption
 
-The SAGE encryption algorithm uses a two step encryption method. The first step, a padding scheme, is implemented with a simple Hill Cipher. The length of the message determines whether one or two matrices are generated. For example, if there are 41 characters in the message and the chosen matrix size is 5, then one 5x5 matrix and one 6x6 matrix will be generated. The first matrix will be used seven times to encrypt a total of 35 characters of the message. The 6x6 matrix will be used to encrypt the remaining 6 characters of the message.
+The SAGE encryption algorithm uses a two-step encryption method. The first step, a padding scheme, is implemented with a simple Hill Cipher. The length of the message determines whether one or two matrices are generated. For example, if there are 41 characters in the message and the chosen matrix size is 5, then one 5x5 matrix and one 6x6 matrix will be generated. The first matrix will be used seven times to encrypt a total of 35 characters of the message. The second matrix (6x6) will be used to encrypt the remaining 6 characters of the message.
 
-Once the message has been encrypted by the Hill Cipher, the public key pair of the person you want to send the message to is used to encrypt both the matrix and the padded message. Please note, packaging the key to the padding scheme __with__ the message itself is a __serious__ vulnerability in the SAGE encryption method. The public-key encrypted message can now be sent to its intended recipient
+Once the message has been encrypted by the Hill Cipher, the public key pair of the person you want to send the message to is used to encrypt both the matrix and the padded message (please note that packaging the key to the padding scheme __with__ the message itself is a __serious__ vulnerability in the SAGE encryption method). The public-key encrypted message can now be sent to its intended recipient.
 
 ###### Decryption
 
-When the encrypted message is received by its intended party, the first layer of encryption can be undone by using the correct private key. Once this layer of encryption has been unlocked, both matrices are inverted and used to undo the padding scheme of the message. The message is now readable.
+When the encrypted message is received by its intended party, the first layer of encryption can be undone by using the correct private key. Once this layer of encryption has been unlocked, both matrices are inverted and used to undo the padding scheme of the message. The message is now human-readable.
 
-#### Usage
+### Usage
 
+#### Generating and Retrieving Keys
 
 ###### Retrieve a stored private key
 
@@ -67,3 +68,6 @@ When the encrypted message is received by its intended party, the first layer of
 `public_key = PublicKey(private_key.p, private_key.q)`
 
 `public_key.retrieve_stored_key('mypath/public_key.txt')`
+
+
+#### Encrypting Messages

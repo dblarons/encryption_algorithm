@@ -1,5 +1,8 @@
 import numpy, random, json
 
+HILL_STRENGTH = 20
+KEY_STRENGTH = 800 # Upper end of range for private keys
+
 ''' PrivateKey
     
     PrivateKey takes no parameters for initialization, but p and q instance 
@@ -31,25 +34,23 @@ class PrivateKey(object):
         return key
 
     def new_private_key_pair(self):
-        self.p = self.create_private_key(1000)
-        self.q = self.create_private_key(1000)
+        self.p = self.create_private_key(KEY_STRENGTH)
+        self.q = self.create_private_key(KEY_STRENGTH)
         while self.q == self.p:
-            self.q = self.create_private_key(1000)
+            self.q = self.create_private_key(KEY_STRENGTH)
 
     def store_private_key(self, filepath):
         if not self.p or not self.q:
             self.new_private_key_pair()
         a = [str(self.p), str(self.q)]
-        f = open(filepath, "w+") # creates a new file if none is found
-        f.write('.'.join(a))
-        f.close()
+        with open(filepath, 'w+') as f:
+            f.write('.'.join(a))
 
     def retrieve_stored_key(self, filepath):
-        f = open(filepath, "r")
-        keychain = f.read()
+        with open(filepath, 'r') as f:
+            keychain = f.read()
         self.p = int(keychain.partition(".")[0])
         self.q = int(keychain.partition(".")[2])
-        f.close()
 
 
 ''' PublicKey 
@@ -88,16 +89,14 @@ class PublicKey(object):
             self.generate_e()
 
         a = [str(self.n), str(self.e)]
-        f = open(filepath, 'w+') # creates a new file if none is found
-        f.write('.'.join(a))
-        f.close()
+        with open(filepath, 'w+') as f:
+            f.write('.'.join(a))
 
     def retrieve_stored_key(self, filepath):
-        f = open(filepath, "r")
-        keychain = f.read()
+        with open(filepath, 'r') as f:
+            keychain = f.read()
         self.n = int(keychain.partition(".")[0])
         self.e = int(keychain.partition(".")[2])
-        f.close()
 
 class EncryptMessage(object):
 
@@ -110,41 +109,26 @@ class EncryptMessage(object):
         matrix[0] = matrix[0] * 2
         while numpy.linalg.det(matrix) != 1 and numpy.linalg.det(matrix) != -1:
             matrix = numpy.eye(size)
-            for i in range(20):
+            for i in range(HILL_STRENGTH):
                 a = random.randint(0, size - 1)
                 b = random.randint(0, size - 1)
                 while b == a:
                     b = random.randint(0, size - 1)
                 matrix[a] = matrix[a] + matrix[b]
-            if numpy.linalg.det(matrix) == 1 or numpy.linalg.det(matrix) == -1:
-                break
         return matrix
 
     def generate_hill_cipher_two(self, size):
         if size == 0:
             return [[0]]
-
-        matrix = numpy.eye(size)
-        matrix[0] = matrix[0] * 2
-
-        # generate new matrices until one is invertible
-        while numpy.linalg.det(matrix) != 1.0 and numpy.linalg.det(matrix) != -1.0:
-            matrix = numpy.eye(size)
-            for i in range(20):
-                a = random.randint(0, size - 1)
-                b = random.randint(0, size - 1)
-                # don't add multiples of one row to itself
-                while b == a:
-                    b = random.randint(0, size - 1)
-                matrix[a] = matrix[a] + matrix[b]
-
-        return matrix
+        return self.generate_hill_cipher_one(size)
 
     def read_plain_text(self, file):
-        f = open(file, "r")
-        return f.read()
-        f.close()
+        with open(file, 'r') as f:
+            contents = f.read()
+        return contents
 
+    # HERE
+    # returns (first_matrix_size, second_matrix_size)
     def determine_matrix_sizes(self, text_length, size):
         if text_length / size == 0:  # Not enough to make one full-size matrix
             return text_length, 0
@@ -233,10 +217,8 @@ class EncryptMessage(object):
         return send_file
 
     def output_encrypted_message(self, encrypted_string):
-        f = open("encrypted_message.txt", "w")
-        f.write(encrypted_string)
-        f.close()
-
+        with open('encrypted_message.txt', 'w') as f:
+            f.write(encrypted_string)
 
 
 class DecryptMessage(object):
@@ -248,9 +230,9 @@ class DecryptMessage(object):
         self.n = p * q
 
     def read_encrypted_text(self):
-        f = open(self.textfile, "r")
-        return f.read()
-        f.close()
+        with open(self.textfile, 'r') as f:
+            contents = f.read()
+        return contents
 
     def separate_matrix_from_message(self, encrypted_message):
         encrypted_array = encrypted_message.split(".")
@@ -287,7 +269,7 @@ class DecryptMessage(object):
         return matrix
 
     def invert_cipher(self, unencrypted_cipher):
-        if len(unencrypted_cipher) != 1:
+        if len(unencrypted_cipher) != 0:
             matrix = numpy.matrix(unencrypted_cipher).I
             for i in range(len(numpy.array(matrix))):
                 matrix = numpy.array(matrix)
@@ -307,11 +289,20 @@ class DecryptMessage(object):
         size = len(inverted_matrix1)
         message = []
 
+        # HERE
         # if the second matrix needs to be used, use the first matrix one less time
-        if len(inverted_matrix2) > 1:
-            loops = len(decrypted_message) / size - 1
-        elif len(inverted_matrix2) == 1:
+        loops = 0
+        if len(decrypted_message) == 1:
             loops = len(decrypted_message) / size
+        elif len(decrypted_message) / size == 0:
+            loops = 1
+        elif len(decrypted_message) % size == 0:
+            loops = len(decrypted_message) / size
+        elif len(decrypted_message) % size > 0:
+            if len(decrypted_message) % size == 1:
+                loops = len(decrypted_message) / size - 1
+            elif len(decrypted_message) % size > 1:
+                loops = len(decrypted_message) / size
 
         for i in range(loops):
             array = []
@@ -322,7 +313,11 @@ class DecryptMessage(object):
             for j in range(size):
                 message.append(message0[j])
 
-        # decrypt the "leftovers"
+        # return now if there is not a second matrix
+        if len(inverted_matrix2) == 1:
+            return message
+
+        # decrypt the "leftovers" if there is a second matrix
         size = len(inverted_matrix2)
         array1 = []
         for i in range(size):
@@ -337,13 +332,12 @@ class DecryptMessage(object):
         alphabet = get_alphabet()
         plain_text = ""
         for i in range(len(message)):
-                plain_text = plain_text + alphabet[(int(message[i]) % 89)]
+            plain_text = plain_text + alphabet[(int(message[i]) % 89)]
         return plain_text
 
     def output_plain_text_message(self, message):
-        f = open("decrypted_message.txt", "w")
-        f.write(message)
-        f.close()
+        with open('decrypted_message.txt', 'w') as f:
+            f.write(message)
 
 # Helper methods
 
@@ -354,7 +348,9 @@ def generate_phi_n(p, q):
 
 # Get the supported alphabet from its json file and make into array
 def get_alphabet():
-    return json.loads(open('alphabet.json', 'r').read())
+    with open('alphabet.json', 'r') as f:
+        alphabet = json.loads(f.read())
+    return alphabet
 
 if __name__ == '__main__':
     private_key = PrivateKey()
