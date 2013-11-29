@@ -62,33 +62,29 @@ class PrivateKey(object):
 
 '''
 class PublicKey(object):
-    def __init__(self, p, q):
-        self.p = p
-        self.q = q
+    def __init__(self):
+        pass
 
     # n = p * q
-    def generate_n(self):
-        self.n = self.p * self.q
+    def generate_n(self, p, q):
+        self.n = p * q
 
-    def generate_e(self):
+    def generate_e(self, p, q):
         private_key = PrivateKey()
         e = private_key.create_private_key(100)
-        phi_n = generate_phi_n(self.p, self.q)
+        phi_n = generate_phi_n(p, q)
         while phi_n % e == 0:
             e = private_key.create_private_key(100)
         self.e = long(e)
 
-    def new_public_key_pair(self):
-        self.generate_n()
-        self.generate_e()
+    def new_public_key_pair(self, p, q):
+        self.generate_n(p, q)
+        self.generate_e(p, q)
 
     # stores public key in the format n.e
     def store_public_key(self, filepath):
-        if not self.n:
-            self.generate_n()
-        if not self.e:
-            self.generate_e()
-
+        if not self.n or not self.e:
+            raise NameError('Public key pair not generated. Please use new_public_key_pair.')
         a = [str(self.n), str(self.e)]
         with open(filepath, 'w+') as f:
             f.write('.'.join(a))
@@ -120,9 +116,9 @@ class EncryptMessage(object):
         cipher_one = self.generate_hill_cipher_one(sizes[0])
         cipher_two = self.generate_hill_cipher_two(sizes[1])
         cipher_text = self.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
-        encrypted_cipher_one = self.encrypt_cipher_with_public_key(cipher_one, public_key.n, public_key.e)
-        encrypted_cipher_two = self.encrypt_cipher_with_public_key(cipher_two, public_key.n, public_key.e)
-        encrypted_message_array = self.encrypt_message_with_public_key(cipher_text, public_key.n, public_key.e)
+        encrypted_cipher_one = self.encrypt_cipher_with_public_key(cipher_one, self.n, self.e)
+        encrypted_cipher_two = self.encrypt_cipher_with_public_key(cipher_two, self.n, self.e)
+        encrypted_message_array = self.encrypt_message_with_public_key(cipher_text, self.n, self.e)
         self.encrypted_message = self.create_encrypted_string(sizes[0], sizes[1], encrypted_cipher_one, encrypted_cipher_two, encrypted_message_array)
 
     def generate_hill_cipher_one(self, size):
@@ -237,7 +233,7 @@ class EncryptMessage(object):
 
     def write(self, output_file):
         if not self.encrypted_message:
-            return
+            raise NameError('encrypted_message not present')
         with open(output_file, 'w') as f:
             f.write(self.encrypted_message)
 
@@ -257,13 +253,13 @@ class DecryptMessage(object):
 
     def main(self):
         matrices = self.separate_matrix_from_message() # (matrix1, matrix2, message, size1, size2)
-        phi_n = generate_phi_n(private_key.p, private_key.q)
+        phi_n = generate_phi_n(self.p, self.q)
         d = self.generate_d(phi_n)
-        matrix1 = self.decrypt_cipher(d, public_key.n, matrices[0], matrices[3])
-        matrix2 = self.decrypt_cipher(d, public_key.n, matrices[1], matrices[4])
+        matrix1 = self.decrypt_cipher(d, self.n, matrices[0], matrices[3])
+        matrix2 = self.decrypt_cipher(d, self.n, matrices[1], matrices[4])
         imatrix1 = self.invert_cipher(matrix1)
         imatrix2 = self.invert_cipher(matrix2)
-        decrypted_message = self.decrypt_pk_message(d, public_key.n, matrices[2])
+        decrypted_message = self.decrypt_pk_message(d, self.n, matrices[2])
         decrypted_hill_cipher = self.decrypt_hill_cipher(imatrix1, imatrix2, decrypted_message)
         self.message_to_plain_text(decrypted_hill_cipher)
 
@@ -369,7 +365,7 @@ class DecryptMessage(object):
 
     def write(self, output_file):
         if not self.decrypted_message:
-            return
+            raise NameError('decrypted_message not present')
         with open(output_file, 'w') as f:
             f.write(self.decrypted_message)
 
@@ -385,18 +381,3 @@ def get_alphabet():
     with open('alphabet.json', 'r') as f:
         alphabet = json.loads(f.read())
     return alphabet
-
-if __name__ == '__main__':
-    private_key = PrivateKey()
-    private_key.new_private_key_pair()
-    private_key.store_private_key('private_key.txt')
-
-    public_key = PublicKey(private_key.p, private_key.q)
-    public_key.new_public_key_pair()
-    public_key.store_public_key('public_key.txt')
-
-    encrypted_msg = EncryptMessage(public_key.n, public_key.e, 'test.txt')
-    encrypted_msg.write('encrypted_message.txt')
-
-    decrypted_msg = DecryptMessage(private_key.p, private_key.q, public_key.e, "encrypted_message.txt")
-    decrypted_msg.write('decrypted_message.txt')

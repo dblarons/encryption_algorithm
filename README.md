@@ -40,23 +40,23 @@ When the encrypted message is received by its intended party, the first layer of
 
 ###### Retrieve a stored private key
 
-`private_key = PublicKey()`
+`private_key = PrivateKey()`
 
 `private_key.retrieve_stored_key('mypath/private_key.txt')`
 
 
 ###### Generate and store a public key
 
-`public_key = PublicKey(private_key.p, private_key.q)`
+`public_key = PublicKey()`
 
-`public_key.new_public_key_pair()`
+`public_key.new_public_key_pair(private_key.p, private_key.q)`
 
 `public_key.store_public_key('mypath/public_key.txt')`
 
 
 ###### Retrieve a stored public key
 
-`public_key = PublicKey(private_key.p, private_key.q)`
+`public_key = PublicKey()`
 
 `public_key.retrieve_stored_key('mypath/public_key.txt')`
 
