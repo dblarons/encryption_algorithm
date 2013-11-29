@@ -202,7 +202,7 @@ class EncryptMessage(object):
                 array = cipher[i]
                 for j in range(len(cipher[0])):
                     m = long(array[j])
-                    c = (m ** e) % n
+                    c = pow(m, e, n)
 
                     pk_encrypted_cipher.append(c)
             return pk_encrypted_cipher
