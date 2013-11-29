@@ -1,7 +1,7 @@
 import numpy, random, json
 
 HILL_STRENGTH = 20
-KEY_STRENGTH = 800 # Upper end of range for private keys
+KEY_STRENGTH = 100000 # Upper end of range for private keys (don't make more than 10000000000)
 
 ''' PrivateKey
     
@@ -30,7 +30,7 @@ class PrivateKey(object):
 
     def create_private_key(self, n):
         primes = self.generate_prime_number(n)
-        key = primes[random.randint(0, (len(primes) - 1))]
+        key = primes[random.randint(3, (len(primes) - 1))]
         return key
 
     def new_private_key_pair(self):
@@ -259,7 +259,7 @@ class DecryptMessage(object):
     def decrypt_cipher(self, d, n, encrypted_cipher, size): # Cipher is c in the formula
         unencrypted_cipher = []
         for i in range(len(encrypted_cipher)):
-            unencrypted_cipher.append((encrypted_cipher[i] ** d) % n)
+            unencrypted_cipher.append(pow(encrypted_cipher[i], d, n))
         matrix = []
         for i in range(size):
             matrix1 = []
@@ -281,8 +281,10 @@ class DecryptMessage(object):
 
     def decrypt_pk_message(self, d, n, message):
         decrypted_message = []
+        print "n: " + str(n)
+        print "d: " + str(d)
         for i in range(len(message)):
-            decrypted_message.append(long(message[i]) ** d % n)
+            decrypted_message.append(pow(long(message[i]), d, n))
         return decrypted_message
 
     def decrypt_hill_cipher(self, inverted_matrix1, inverted_matrix2, decrypted_message):

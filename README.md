@@ -29,15 +29,6 @@ When the encrypted message is received by its intended party, the first layer of
 
 #### Generating and Retrieving Keys
 
-###### Retrieve a stored private key
-
-`filename = 'mypath/private_key.txt'`
-
-`private_key = PrivateKey()`
-
-`private_key.retrieve_stored_key(filename)`
-
-
 ###### Generate and store a private key
 
 `private_key = PrivateKey()`
