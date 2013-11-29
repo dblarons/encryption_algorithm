@@ -69,3 +69,7 @@ When the encrypted message is received by its intended party, the first layer of
 
 
 #### Decrypting Messages
+
+`decrypted_msg = DecryptMessage(private_key.p, private_key.q, public_key.e, 'mypath/input_file.txt')`
+
+`decrypted_msg.write('mypath/output_file.txt')`

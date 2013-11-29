@@ -243,20 +243,32 @@ class EncryptMessage(object):
 
 
 class DecryptMessage(object):
-    def __init__(self, textfile, p, q, e):
-        self.textfile = textfile
+    def __init__(self, p, q, e, textfile):
         self.p = p
         self.q = q
         self.e = e
         self.n = p * q
 
-    def read_encrypted_text(self):
-        with open(self.textfile, 'r') as f:
+        with open(textfile, 'r') as f:
             contents = f.read()
-        return contents
+        self.encrypted_message = contents
 
-    def separate_matrix_from_message(self, encrypted_message):
-        encrypted_array = encrypted_message.split(".")
+        self.main()
+
+    def main(self):
+        matrices = self.separate_matrix_from_message() # (matrix1, matrix2, message, size1, size2)
+        phi_n = generate_phi_n(private_key.p, private_key.q)
+        d = self.generate_d(phi_n)
+        matrix1 = self.decrypt_cipher(d, public_key.n, matrices[0], matrices[3])
+        matrix2 = self.decrypt_cipher(d, public_key.n, matrices[1], matrices[4])
+        imatrix1 = self.invert_cipher(matrix1)
+        imatrix2 = self.invert_cipher(matrix2)
+        decrypted_message = self.decrypt_pk_message(d, public_key.n, matrices[2])
+        decrypted_hill_cipher = self.decrypt_hill_cipher(imatrix1, imatrix2, decrypted_message)
+        self.message_to_plain_text(decrypted_hill_cipher)
+
+    def separate_matrix_from_message(self):
+        encrypted_array = self.encrypted_message.split(".")
         size_one = int(encrypted_array.pop(0))
         size_two = int(encrypted_array.pop(0))
         matrix_length_one = size_one ** 2
@@ -353,11 +365,13 @@ class DecryptMessage(object):
         plain_text = ""
         for i in range(len(message)):
             plain_text = plain_text + alphabet[(int(message[i]) % 89)]
-        return plain_text
+        self.decrypted_message = plain_text
 
-    def output_plain_text_message(self, message):
-        with open('decrypted_message.txt', 'w') as f:
-            f.write(message)
+    def write(self, output_file):
+        if not self.decrypted_message:
+            return
+        with open(output_file, 'w') as f:
+            f.write(self.decrypted_message)
 
 # Helper methods
 
@@ -384,16 +398,5 @@ if __name__ == '__main__':
     encrypted_msg = EncryptMessage(public_key.n, public_key.e, 'test.txt')
     encrypted_msg.write('encrypted_message.txt')
 
-    dm = DecryptMessage("encrypted_message.txt", private_key.p, private_key.q, public_key.e)
-    encrypted_message = dm.read_encrypted_text()
-    matrices = dm.separate_matrix_from_message(encrypted_message) # (matrix1, matrix2, size1, size2)
-    phi_n = generate_phi_n(private_key.p, private_key.q)
-    d = dm.generate_d(phi_n)
-    matrix1 = dm.decrypt_cipher(d, public_key.n, matrices[0], matrices[3])
-    matrix2 = dm.decrypt_cipher(d, public_key.n, matrices[1], matrices[4])
-    imatrix1 = dm.invert_cipher(matrix1)
-    imatrix2 = dm.invert_cipher(matrix2)
-    decrypted_message = dm.decrypt_pk_message(d, public_key.n, matrices[2])
-    decrypted_hill_cipher = dm.decrypt_hill_cipher(imatrix1, imatrix2, decrypted_message)
-    the_message = dm.message_to_plain_text(decrypted_hill_cipher)
-    dm.output_plain_text_message(the_message)
+    decrypted_msg = DecryptMessage(private_key.p, private_key.q, public_key.e, "encrypted_message.txt")
+    decrypted_msg.write('decrypted_message.txt')
