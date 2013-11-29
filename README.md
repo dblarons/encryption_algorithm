@@ -62,3 +62,10 @@ When the encrypted message is received by its intended party, the first layer of
 
 
 #### Encrypting Messages
+
+`encrypted_msg = EncryptMessage(public_key.n, public_key.e, 'mypath/input_file.txt')`
+
+`enrypted_msg.write('mypath/output_file.txt')`
+
+
+#### Decrypting Messages

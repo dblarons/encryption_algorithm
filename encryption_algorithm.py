@@ -1,7 +1,8 @@
 import numpy, random, json
 
-HILL_STRENGTH = 20
+HILL_STRENGTH = 50
 KEY_STRENGTH = 100000 # Upper end of range for private keys (don't make more than 10000000000)
+MATRIX_SIZE = 15
 
 ''' PrivateKey
     
@@ -100,9 +101,29 @@ class PublicKey(object):
 
 class EncryptMessage(object):
 
-    def __init__(self, n, e):
+    def __init__(self, n, e, filepath, matrix_size=MATRIX_SIZE):
         self.n = n
         self.e = e
+
+        with open(filepath, 'r') as f:
+            contents = f.read()
+        self.message = contents
+
+        self.matrix_size = matrix_size
+
+        self.main()
+
+    def main(self):
+        number_text = self.numbers_for_letters()
+        number_of_matrices = self.number_of_matrices()
+        sizes = self.determine_matrix_sizes()
+        cipher_one = self.generate_hill_cipher_one(sizes[0])
+        cipher_two = self.generate_hill_cipher_two(sizes[1])
+        cipher_text = self.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
+        encrypted_cipher_one = self.encrypt_cipher_with_public_key(cipher_one, public_key.n, public_key.e)
+        encrypted_cipher_two = self.encrypt_cipher_with_public_key(cipher_two, public_key.n, public_key.e)
+        encrypted_message_array = self.encrypt_message_with_public_key(cipher_text, public_key.n, public_key.e)
+        self.encrypted_message = self.create_encrypted_string(sizes[0], sizes[1], encrypted_cipher_one, encrypted_cipher_two, encrypted_message_array)
 
     def generate_hill_cipher_one(self, size):
         matrix = numpy.eye(size)
@@ -122,52 +143,50 @@ class EncryptMessage(object):
             return [[0]]
         return self.generate_hill_cipher_one(size)
 
-    def read_plain_text(self, file):
-        with open(file, 'r') as f:
-            contents = f.read()
-        return contents
-
-    # HERE
     # returns (first_matrix_size, second_matrix_size)
-    def determine_matrix_sizes(self, text_length, size):
-        if text_length / size == 0:  # Not enough to make one full-size matrix
+    def determine_matrix_sizes(self):
+        text_length = len(self.message)
+        if text_length / self.matrix_size == 0:  # Not enough to make one full-size matrix
             return text_length, 0
-        elif text_length % size == 0:  # One matrix fits all
-            return size, 0
-        elif text_length % size == 1:
-            if text_length / size == 1:  # ex/ size = 10, length = 11, so one 11x11 matrix
-                return size + 1, 0
+        elif text_length % self.matrix_size == 0:  # One matrix fits all
+            return self.matrix_size, 0
+        elif text_length % self.matrix_size == 1:
+            if text_length / self.matrix_size == 1:  # ex/ size = 10, length = 11, so one 11x11 matrix
+                return self.matrix_size + 1, 0
             else:                        # ex/ size = 10, length = 21
-                return size, size + 1
+                return self.matrix_size, self.matrix_size + 1
         else:
-            return size, text_length % size # ex output/ (10, 4)
+            return self.matrix_size, text_length % self.matrix_size # ex output/ (10, 4)
 
-    def number_of_matrices(self, text_length, size):
-        if text_length % size == 1:  # ex/ 10 matrices for text_length = 100
-            return text_length / size - 1
+    def number_of_matrices(self):
+        text_length = len(self.message)
+        if text_length % self.matrix_size == 1:  # ex/ 10 matrices for text_length = 100
+            return text_length / self.matrix_size - 1
         else:
-            return text_length / size
+            return text_length / self.matrix_size
 
-    def plain_text_to_number_text(self, plain_text):
+    # Use 87 character alphabet to convert each letter into a number
+    def numbers_for_letters(self):
         alphabet = get_alphabet()
-        number_text = []
-        for i in range(len(plain_text)):
-            if plain_text[i] in alphabet:
-                number = alphabet.index(plain_text[i])
-                number_text.append(number)
+        message_in_numbers = []
+        for i in range(len(self.message)):
+            if self.message[i] in alphabet:
+                number = alphabet.index(self.message[i])
+                message_in_numbers.append(number)
             else:
-                number_text.append(86)
-        return number_text
+                # Character is unrecognized; assign default
+                message_in_numbers.append(86)
+        return message_in_numbers
 
     def encrypt_plain_text(self, number_text, cipher1, cipher2, loops):
-        encrypted_message = []
+        encrypted_message_array = []
         for i in range(loops):
             array = []
             for j in range(len(cipher1[0])):
                 array.append(number_text.pop(0))
             array2 = numpy.dot(array, cipher1)
             for i in range(len(array2)):
-                encrypted_message.append(array2[i])
+                encrypted_message_array.append(array2[i])
         try:
             cipher2[0][1] # This is what we're 'trying.' If this doesn't exist, it won't work.
             array3 = []
@@ -175,10 +194,10 @@ class EncryptMessage(object):
                 array3.append(number_text.pop(0))
             array4 = numpy.dot(array3, cipher2)
             for i in range(len(array4)):
-                encrypted_message.append(array4[i])
+                encrypted_message_array.append(array4[i])
         except IndexError:
             pass
-        return encrypted_message
+        return encrypted_message_array
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
         if not cipher[0][0] == 0:
@@ -198,7 +217,7 @@ class EncryptMessage(object):
         pk_encrypted_message = []
         for i in range(len(message)):
             m = long(message[i])
-            c = m ** e % n
+            c = pow(m, e, n)
             pk_encrypted_message.append(c)
         return pk_encrypted_message
 
@@ -216,9 +235,11 @@ class EncryptMessage(object):
         send_file = send_file[:(len(send_file) - 1)]
         return send_file
 
-    def output_encrypted_message(self, encrypted_string):
-        with open('encrypted_message.txt', 'w') as f:
-            f.write(encrypted_string)
+    def write(self, output_file):
+        if not self.encrypted_message:
+            return
+        with open(output_file, 'w') as f:
+            f.write(self.encrypted_message)
 
 
 class DecryptMessage(object):
@@ -281,8 +302,6 @@ class DecryptMessage(object):
 
     def decrypt_pk_message(self, d, n, message):
         decrypted_message = []
-        print "n: " + str(n)
-        print "d: " + str(d)
         for i in range(len(message)):
             decrypted_message.append(pow(long(message[i]), d, n))
         return decrypted_message
@@ -291,7 +310,6 @@ class DecryptMessage(object):
         size = len(inverted_matrix1)
         message = []
 
-        # HERE
         # if the second matrix needs to be used, use the first matrix one less time
         loops = 0
         if len(decrypted_message) == 1:
@@ -363,20 +381,8 @@ if __name__ == '__main__':
     public_key.new_public_key_pair()
     public_key.store_public_key('public_key.txt')
 
-    c = EncryptMessage(public_key.n, public_key.e)
-    file1 = c.read_plain_text("test.txt")
-    number_text = c.plain_text_to_number_text(file1)
-    text_length = len(number_text)
-    number_of_matrices = c.number_of_matrices(text_length, 5)
-    sizes = c.determine_matrix_sizes(len(file1), 5)
-    cipher_one = c.generate_hill_cipher_one(sizes[0])
-    cipher_two = c.generate_hill_cipher_two(sizes[1])
-    cipher_text = c.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
-    encrypted_cipher_one = c.encrypt_cipher_with_public_key(cipher_one, public_key.n, public_key.e)
-    encrypted_cipher_two = c.encrypt_cipher_with_public_key(cipher_two, public_key.n, public_key.e)
-    encrypted_message = c.encrypt_message_with_public_key(cipher_text, public_key.n, public_key.e)
-    string = c.create_encrypted_string(sizes[0], sizes[1], encrypted_cipher_one, encrypted_cipher_two, encrypted_message)
-    c.output_encrypted_message(string)
+    encrypted_msg = EncryptMessage(public_key.n, public_key.e, 'test.txt')
+    encrypted_msg.write('encrypted_message.txt')
 
     dm = DecryptMessage("encrypted_message.txt", private_key.p, private_key.q, public_key.e)
     encrypted_message = dm.read_encrypted_text()
