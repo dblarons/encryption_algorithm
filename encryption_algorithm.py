@@ -142,7 +142,7 @@ class EncryptMessage(object):
     # returns (first_matrix_size, second_matrix_size)
     def determine_matrix_sizes(self):
         text_length = len(self.message)
-        if text_length / self.matrix_size == 0:  # Not enough to make one full-size matrix
+        if text_length < self.matrix_size:  # Not enough to make one full-size matrix
             return text_length, 0
         elif text_length % self.matrix_size == 0:  # One matrix fits all
             return self.matrix_size, 0
