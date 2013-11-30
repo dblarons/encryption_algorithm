@@ -252,7 +252,9 @@ class DecryptMessage(object):
         imatrix1 = self.invert_cipher(matrix1)
         imatrix2 = self.invert_cipher(matrix2)
         decrypted_message = self.decrypt_pk_message(d, self.n, matrices[2])
-        decrypted_hill_cipher = self.decrypt_hill_cipher(imatrix1, imatrix2, decrypted_message)
+        loops = loops(decrypted_message)
+        message = self.decrypt_hill_cipher(imatrix1, decrypted_message, loops, [])
+        decrypted_hill_cipher = self.decrypt_hill_cipher(imatrix2, decrypted_message, 1, message)
         self.message_to_plain_text(decrypted_hill_cipher)
 
     def separate_matrix_from_message(self):
@@ -306,16 +308,18 @@ class DecryptMessage(object):
             decrypted_message.append(pow(long(message[i]), d, n))
         return decrypted_message
 
-    def decrypt_hill_cipher(self, inverted_matrix1, inverted_matrix2, decrypted_message):
-        size = len(inverted_matrix1)
-        message = []
-
-        # if the second matrix needs to be used, use the first matrix one less time
+    def loops(self, decrypted_message):
         loops = 0
         if len(decrypted_message) % size == 1:
             loops = len(decrypted_message) / size - 1
         else:
             loops = len(decrypted_message) / size
+
+    def decrypt_hill_cipher(self, inverted_matrix, decrypted_message, loops, message):
+        size = len(inverted_matrix)
+
+        if size == 1: # return now if there is not a second matrix
+            return message
 
         for i in range(loops):
             encrypted = []
@@ -325,21 +329,6 @@ class DecryptMessage(object):
             unencrypted = numpy.array(unencrypted)
             for j in range(size):
                 message.append(unencrypted[j])
-
-        # return now if there is not a second matrix
-        if len(inverted_matrix2) == 1:
-            return message
-
-        # decrypt the "leftovers" if there is a second matrix
-        size = len(inverted_matrix2)
-        array1 = []
-        for i in range(size):
-            array1.append(decrypted_message.pop(0))
-        array2 = numpy.dot(array1, inverted_matrix2)
-        array2 = numpy.array(array2)
-        for i in range(size):
-            message.append(array2[i])
-        return message
 
     def message_to_plain_text(self, message):
         alphabet = get_alphabet()
