@@ -115,7 +115,8 @@ class EncryptMessage(object):
         sizes = self.determine_matrix_sizes()
         cipher_one = self.generate_hill_cipher_one(sizes[0])
         cipher_two = self.generate_hill_cipher_two(sizes[1])
-        cipher_text = self.encrypt_plain_text(number_text, cipher_one, cipher_two, number_of_matrices)
+        encrypted_array = self.encrypt_plain_text(number_text, cipher_one, [], number_of_matrices)
+        cipher_text = self.encrypt_plain_text(number_text, cipher_two, encrypted_array, number_of_matrices)
         encrypted_cipher_one = self.encrypt_cipher_with_public_key(cipher_one, self.n, self.e)
         encrypted_cipher_two = self.encrypt_cipher_with_public_key(cipher_two, self.n, self.e)
         encrypted_message_array = self.encrypt_message_with_public_key(cipher_text, self.n, self.e)
@@ -174,24 +175,16 @@ class EncryptMessage(object):
                 message_in_numbers.append(86)
         return message_in_numbers
 
-    def encrypt_plain_text(self, number_text, cipher1, cipher2, loops):
-        encrypted_message_array = []
-        cipher1_size = len(cipher1[0])
-        for i in range(loops):
-            message_chunk = []
-            for j in range(len(cipher1_size)):
-                message_chunk.append(number_text.pop(0))
-            encrypted = numpy.dot(message_chunk, cipher1)
-            for i in range(len(encrypted)):
-                encrypted_message_array.append(encrypted[i])
+    def encrypt_plain_text(self, number_text, cipher, encrypted_message_array, loops):
+        cipher_size = len(cipher[0])
         try:
-            cipher2[0][1] # This is what we're 'trying.' If this doesn't exist, it won't work.
-            last_chunk = []
-            for i in range(len(number_text)):
-                last_chunk.append(number_text.pop(0))
-            last_encrypted = numpy.dot(last_chunk, cipher2)
-            for i in range(len(last_encrypted)):
-                encrypted_message_array.append(last_encrypted[i])
+            for i in range(loops):
+                message_chunk = []
+                for j in range(len(cipher_size)):
+                    message_chunk.append(number_text.pop(0))
+                encrypted = numpy.dot(message_chunk, cipher)
+                for i in range(len(encrypted)):
+                    encrypted_message_array.append(encrypted[i])
         except IndexError:
             pass
         return encrypted_message_array
