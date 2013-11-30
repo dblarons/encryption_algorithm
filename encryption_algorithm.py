@@ -190,14 +190,14 @@ class EncryptMessage(object):
         return encrypted_message_array
 
     def encrypt_cipher_with_public_key(self, cipher, n, e):
+        size = len(cipher[0])
         if not cipher[0][0] == 0:
             pk_encrypted_cipher = []
-            for i in range(len(cipher[0])):
-                array = cipher[i]
-                for j in range(len(cipher[0])):
-                    m = long(array[j])
+            for i in range(size):
+                row = cipher[i] # for each row
+                for j in range(size):
+                    m = long(row[j]) # for each entry in each row
                     c = pow(m, e, n)
-
                     pk_encrypted_cipher.append(c)
             return pk_encrypted_cipher
         else:
