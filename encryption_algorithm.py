@@ -154,7 +154,9 @@ class EncryptMessage(object):
 
     def number_of_matrices(self):
         text_length = len(self.message)
-        if text_length % self.matrix_size == 1:  # ex/ 10 matrices for text_length = 100
+        if text_length < self.matrix_size :  # ex/ 10 matrices for text_length = 100
+            return 1
+        elif text_length % self.matrix_size == 1:
             return text_length / self.matrix_size - 1
         else:
             return text_length / self.matrix_size
@@ -174,21 +176,22 @@ class EncryptMessage(object):
 
     def encrypt_plain_text(self, number_text, cipher1, cipher2, loops):
         encrypted_message_array = []
+        cipher1_size = len(cipher1[0])
         for i in range(loops):
-            array = []
-            for j in range(len(cipher1[0])):
-                array.append(number_text.pop(0))
-            array2 = numpy.dot(array, cipher1)
-            for i in range(len(array2)):
-                encrypted_message_array.append(array2[i])
+            message_chunk = []
+            for j in range(len(cipher1_size)):
+                message_chunk.append(number_text.pop(0))
+            encrypted = numpy.dot(message_chunk, cipher1)
+            for i in range(len(encrypted)):
+                encrypted_message_array.append(encrypted[i])
         try:
             cipher2[0][1] # This is what we're 'trying.' If this doesn't exist, it won't work.
-            array3 = []
+            last_chunk = []
             for i in range(len(number_text)):
-                array3.append(number_text.pop(0))
-            array4 = numpy.dot(array3, cipher2)
-            for i in range(len(array4)):
-                encrypted_message_array.append(array4[i])
+                last_chunk.append(number_text.pop(0))
+            last_encrypted = numpy.dot(last_chunk, cipher2)
+            for i in range(len(last_encrypted)):
+                encrypted_message_array.append(last_encrypted[i])
         except IndexError:
             pass
         return encrypted_message_array
