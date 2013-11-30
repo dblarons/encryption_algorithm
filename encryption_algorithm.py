@@ -111,12 +111,12 @@ class EncryptMessage(object):
 
     def main(self):
         number_text = self.numbers_for_letters()
-        number_of_matrices = self.number_of_matrices()
         sizes = self.determine_matrix_sizes()
+        number_of_matrices = self.number_of_matrices(sizes[0])
         cipher_one = self.generate_hill_cipher_one(sizes[0])
         cipher_two = self.generate_hill_cipher_two(sizes[1])
         encrypted_array = self.encrypt_plain_text(number_text, cipher_one, [], number_of_matrices)
-        cipher_text = self.encrypt_plain_text(number_text, cipher_two, encrypted_array, number_of_matrices)
+        cipher_text = self.encrypt_plain_text(number_text, cipher_two, encrypted_array, 1)
         encrypted_cipher_one = self.encrypt_cipher_with_public_key(cipher_one, self.n, self.e)
         encrypted_cipher_two = self.encrypt_cipher_with_public_key(cipher_two, self.n, self.e)
         encrypted_message_array = self.encrypt_message_with_public_key(cipher_text, self.n, self.e)
@@ -153,14 +153,12 @@ class EncryptMessage(object):
         else:
             return self.matrix_size, text_length % self.matrix_size # ex output/ (10, 4)
 
-    def number_of_matrices(self):
+    def number_of_matrices(self, size):
         text_length = len(self.message)
-        if text_length < self.matrix_size :  # ex/ 10 matrices for text_length = 100
-            return 1
-        elif text_length % self.matrix_size == 1:
-            return text_length / self.matrix_size - 1
+        if text_length % size == 1:  # ex/ 10 matrices for text_length = 100
+            return text_length / size - 1
         else:
-            return text_length / self.matrix_size
+            return text_length / size
 
     # Use 87 character alphabet to convert each letter into a number
     def numbers_for_letters(self):
@@ -314,26 +312,19 @@ class DecryptMessage(object):
 
         # if the second matrix needs to be used, use the first matrix one less time
         loops = 0
-        if len(decrypted_message) == 1:
+        if len(decrypted_message) % size == 1:
+            loops = len(decrypted_message) / size - 1
+        else:
             loops = len(decrypted_message) / size
-        elif len(decrypted_message) / size == 0:
-            loops = 1
-        elif len(decrypted_message) % size == 0:
-            loops = len(decrypted_message) / size
-        elif len(decrypted_message) % size > 0:
-            if len(decrypted_message) % size == 1:
-                loops = len(decrypted_message) / size - 1
-            elif len(decrypted_message) % size > 1:
-                loops = len(decrypted_message) / size
 
         for i in range(loops):
-            array = []
-            for j in range(len(inverted_matrix1)):
-                array.append(decrypted_message.pop(0))
-            message0 = numpy.dot(array, inverted_matrix1) # unencrypt this portion of the message
-            message0 = numpy.array(message0)
+            encrypted = []
             for j in range(size):
-                message.append(message0[j])
+                encrypted.append(decrypted_message.pop(0))
+            unencrypted = numpy.dot(encrypted, inverted_matrix1) # unencrypt this portion of the message
+            unencrypted = numpy.array(unencrypted)
+            for j in range(size):
+                message.append(unencrypted[j])
 
         # return now if there is not a second matrix
         if len(inverted_matrix2) == 1:
