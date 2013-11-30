@@ -144,8 +144,6 @@ class EncryptMessage(object):
         text_length = len(self.message)
         if text_length < self.matrix_size:  # Not enough to make one full-size matrix
             return text_length, 0
-        elif text_length % self.matrix_size == 0:  # One matrix fits all
-            return self.matrix_size, 0
         elif text_length % self.matrix_size == 1:
             if text_length / self.matrix_size == 1:  # ex/ size = 10, length = 11, so one 11x11 matrix
                 return self.matrix_size + 1, 0
