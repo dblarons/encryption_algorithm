@@ -1,7 +1,7 @@
 import numpy, random, json
 
 HILL_STRENGTH = 50
-KEY_STRENGTH = 100000 # Upper end of range for private keys (don't make more than 10000000000)
+KEY_STRENGTH = 1000000000 # Upper end of range for private keys (don't make more than 10000000000)
 MATRIX_SIZE = 15
 
 ''' PrivateKey
