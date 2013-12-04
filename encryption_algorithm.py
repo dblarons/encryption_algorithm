@@ -178,7 +178,7 @@ class EncryptMessage(object):
         try:
             for i in range(loops):
                 message_chunk = []
-                for j in range(len(cipher_size)):
+                for j in range(cipher_size):
                     message_chunk.append(number_text.pop(0))
                 encrypted = numpy.dot(message_chunk, cipher)
                 for i in range(len(encrypted)):
@@ -252,7 +252,7 @@ class DecryptMessage(object):
         imatrix1 = self.invert_cipher(matrix1)
         imatrix2 = self.invert_cipher(matrix2)
         decrypted_message = self.decrypt_pk_message(d, self.n, matrices[2])
-        loops = loops(decrypted_message)
+        loops = self.loops(decrypted_message, len(imatrix1))
         message = self.decrypt_hill_cipher(imatrix1, decrypted_message, loops, [])
         decrypted_hill_cipher = self.decrypt_hill_cipher(imatrix2, decrypted_message, 1, message)
         self.message_to_plain_text(decrypted_hill_cipher)
@@ -308,12 +308,13 @@ class DecryptMessage(object):
             decrypted_message.append(pow(long(message[i]), d, n))
         return decrypted_message
 
-    def loops(self, decrypted_message):
+    def loops(self, decrypted_message, size):
         loops = 0
         if len(decrypted_message) % size == 1:
             loops = len(decrypted_message) / size - 1
         else:
             loops = len(decrypted_message) / size
+        return loops
 
     def decrypt_hill_cipher(self, inverted_matrix, decrypted_message, loops, message):
         size = len(inverted_matrix)
@@ -325,10 +326,11 @@ class DecryptMessage(object):
             encrypted = []
             for j in range(size):
                 encrypted.append(decrypted_message.pop(0))
-            unencrypted = numpy.dot(encrypted, inverted_matrix1) # unencrypt this portion of the message
+            unencrypted = numpy.dot(encrypted, inverted_matrix) # unencrypt this portion of the message
             unencrypted = numpy.array(unencrypted)
             for j in range(size):
                 message.append(unencrypted[j])
+        return message
 
     def message_to_plain_text(self, message):
         alphabet = get_alphabet()
