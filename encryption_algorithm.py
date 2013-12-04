@@ -1,7 +1,7 @@
 import numpy, random, json
 
 HILL_STRENGTH = 50
-KEY_STRENGTH = 1000000000 # Upper end of range for private keys (don't make more than 10000000000)
+KEY_STRENGTH = 10000000 # Upper end of range for private keys (don't make more than 10000000000)
 MATRIX_SIZE = 15
 
 ''' PrivateKey
@@ -29,16 +29,17 @@ class PrivateKey(object):
                 sieve[(k*k+4*k-2*k*(i&1))/3::2*k] = False
         return numpy.r_[2,3,((3*numpy.nonzero(sieve)[0]+1)|1)]
 
-    def create_private_key(self, n):
+    def create_private_key(self, n, beginning):
         primes = self.generate_prime_number(n)
-        key = primes[random.randint(3, (len(primes) - 1))]
+        key = primes[random.randint(beginning, (len(primes) - 1))]
         return key
 
     def new_private_key_pair(self):
-        self.p = self.create_private_key(KEY_STRENGTH)
-        self.q = self.create_private_key(KEY_STRENGTH)
+        self.p = self.create_private_key(KEY_STRENGTH, 500)
+        self.q = self.create_private_key(KEY_STRENGTH, 500)
+        print str(self.p)
         while self.q == self.p:
-            self.q = self.create_private_key(KEY_STRENGTH)
+            self.q = self.create_private_key(KEY_STRENGTH, 500)
 
     def store_private_key(self, filepath):
         if not self.p or not self.q:
@@ -71,10 +72,10 @@ class PublicKey(object):
 
     def generate_e(self, p, q):
         private_key = PrivateKey()
-        e = private_key.create_private_key(100)
+        e = private_key.create_private_key(100, 3)
         phi_n = generate_phi_n(p, q)
         while phi_n % e == 0:
-            e = private_key.create_private_key(100)
+            e = private_key.create_private_key(100, 3)
         self.e = long(e)
 
     def new_public_key_pair(self, p, q):
