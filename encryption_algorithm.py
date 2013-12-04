@@ -336,7 +336,7 @@ class DecryptMessage(object):
         alphabet = get_alphabet()
         plain_text = ""
         for i in range(len(message)):
-            plain_text = plain_text + alphabet[(int(message[i]) % 89)]
+            plain_text = plain_text + alphabet[(int(message[i]) % len(get_alphabet()))]
         self.decrypted_message = plain_text
 
     def write(self, output_file):
