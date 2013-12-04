@@ -124,15 +124,12 @@ class EncryptMessage(object):
 
     def generate_hill_cipher_one(self, size):
         matrix = numpy.eye(size)
-        matrix[0] = matrix[0] * 2
-        while numpy.linalg.det(matrix) != 1 and numpy.linalg.det(matrix) != -1:
-            matrix = numpy.eye(size)
-            for i in range(HILL_STRENGTH):
-                a = random.randint(0, size - 1)
+        for i in range(HILL_STRENGTH):
+            a = random.randint(0, size - 1)
+            b = random.randint(0, size - 1)
+            while b == a:
                 b = random.randint(0, size - 1)
-                while b == a:
-                    b = random.randint(0, size - 1)
-                matrix[a] = matrix[a] + matrix[b]
+            matrix[a] = matrix[a] + matrix[b]
         return matrix
 
     def generate_hill_cipher_two(self, size):
