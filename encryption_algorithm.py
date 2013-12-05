@@ -1,8 +1,9 @@
 import numpy, random, json
 
 HILL_STRENGTH = 50
-KEY_STRENGTH = 10000000 # Upper end of range for private keys (don't make more than 10000000000)
+KEY_STRENGTH = 1000000 # Upper end of range for private keys (don't make more than 10000000000)
 MATRIX_SIZE = 15
+MIN_KEY_STRENGTH = 500 # Number of prime numbers in
 
 ''' PrivateKey
     
@@ -35,11 +36,11 @@ class PrivateKey(object):
         return key
 
     def new_private_key_pair(self):
-        self.p = self.create_private_key(KEY_STRENGTH, 500)
-        self.q = self.create_private_key(KEY_STRENGTH, 500)
+        self.p = self.create_private_key(KEY_STRENGTH, MIN_KEY_STRENGTH)
+        self.q = self.create_private_key(KEY_STRENGTH, MIN_KEY_STRENGTH)
         print str(self.p)
         while self.q == self.p:
-            self.q = self.create_private_key(KEY_STRENGTH, 500)
+            self.q = self.create_private_key(KEY_STRENGTH, MIN_KEY_STRENGTH)
 
     def store_private_key(self, filepath):
         if not self.p or not self.q:
