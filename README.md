@@ -9,6 +9,8 @@ This is a video introduction to the SAGE software: https://www.youtube.com/watch
 
 This encryption algorithm, implemented in Python, is maintained by Carl Block and Aaron Smith, two Vanderbilt University undergraduate students. The algorithm and corresponding front-end application were presented at HackNashville in October 2013 and were later submitted as a class project for Math 194 (Linear Algebra) at the end of the fall 2013 semester.
 
+The master branch is a less stable, but more versatile version of the encryption algorithm and is worth taking a look at. Also, please check out the white paper in the Stable branch.
+
 #### Warning
 
 At this point in time, this encryption algorithm is not intended to be used in any serious, real-world applications. There are serious vulnerabilities in the SAGE encryption algorithm (detailed below). These vulnerabilities have been largely ignored because the point of this project is not secure encryption as much as it is a proof of concept using Hill Ciphers and public key encryption.
