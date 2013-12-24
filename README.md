@@ -1,6 +1,10 @@
 ## SAGE Encryption Algorithm
 ---
 
+#### Video
+
+This is a video introduction to the SAGE software: https://www.youtube.com/watch?v=K0SIKCPJQi4
+
 #### Background
 
 This encryption algorithm, implemented in Python, is maintained by Carl Block and Aaron Smith, two Vanderbilt University undergraduate students. The algorithm and corresponding front-end application were presented at HackNashville in October 2013 and were later submitted as a class project for Math 194 (Linear Algebra) at the end of the fall 2013 semester.
