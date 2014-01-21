@@ -191,6 +191,17 @@ class EncryptMessage(object):
             pass
         return encrypted_message_array
 
+    def convert_to_95imal(self, number):
+        string = ""
+        alphabet = get_alphabet()
+        if number == 0:
+            return alphabet[0]
+        while number != 0:
+            new_number = number % 95
+            number = number / 95
+            string = alphabet[new_number] + string
+        return string
+
     def encrypt_cipher_with_public_key(self, cipher, n, e):
         size = len(cipher[0])
         if not cipher[0][0] == 0:
@@ -200,6 +211,7 @@ class EncryptMessage(object):
                 for j in range(size):
                     m = long(row[j]) # for each entry in each row
                     c = pow(m, e, n)
+                    c = self.convert_to_95imal(c)
                     pk_encrypted_cipher.append(c)
             return pk_encrypted_cipher
         else:
@@ -210,20 +222,22 @@ class EncryptMessage(object):
         for i in range(len(message)):
             m = long(message[i])
             c = pow(m, e, n)
+            c = self.convert_to_95imal(c)
             pk_encrypted_message.append(c)
         return pk_encrypted_message
 
     def matrix_to_string(self, send_file, size, cipher):
         for i in range(size):
-            send_file = send_file + str(cipher[i]) + "."
+            send_file = send_file + str(cipher[i]) + " "
         return send_file
 
     def create_encrypted_string(self, size_one, size_two, cipher_one, cipher_two, message):
-        send_file = str(size_one) + "." + str(size_two) + "."
+        alphabet = get_alphabet()
+        send_file = str(alphabet[size_one]) + " " + str(alphabet[size_two]) + " "
         send_file = self.matrix_to_string(send_file, len(cipher_one), cipher_one)
         send_file = self.matrix_to_string(send_file, len(cipher_two), cipher_two)
         for i in range(len(message)):
-            send_file += str(message[i]) + "."
+            send_file += str(message[i]) + " "
         send_file = send_file[:(len(send_file) - 1)]
         return send_file
 
@@ -262,19 +276,33 @@ class DecryptMessage(object):
         self.message_to_plain_text(decrypted_hill_cipher)
 
     def separate_matrix_from_message(self):
-        encrypted_array = self.encrypted_message.split(".")
-        size_one = int(encrypted_array.pop(0))
-        size_two = int(encrypted_array.pop(0))
+        encrypted_array = self.encrypted_message.split(" ")
+        size_one = encrypted_array.pop(0)
+        size_one = self.convert_from_95imal(size_one)
+        size_two = encrypted_array.pop(0)
+        size_two = self.convert_from_95imal(size_two)
         matrix_length_one = size_one ** 2
         matrix_length_two = size_two ** 2
         matrix_one = []
         for i in range(matrix_length_one):
-            matrix_one.append(long(encrypted_array.pop(0)))
+            entry = self.convert_from_95imal(encrypted_array.pop(0))
+            matrix_one.append(entry)
         matrix_two = []
         for i in range(matrix_length_two):
-            matrix_two.append(long(encrypted_array.pop(0)))
+            entry = self.convert_from_95imal(encrypted_array.pop(0))
+            matrix_two.append(entry)
         message = encrypted_array
         return matrix_one, matrix_two, message, size_one, size_two
+
+    def convert_from_95imal(self, number):
+        alphabet = get_alphabet()
+        length = len(number)
+        new_number = 0
+        for i in range(length):
+            digit = number[length - i - 1]
+            index = alphabet.index(digit)
+            new_number += index * 95 ** i
+        return new_number
 
     def generate_d(self, phi_n):
         a = 1
@@ -309,7 +337,8 @@ class DecryptMessage(object):
     def decrypt_pk_message(self, d, n, message):
         decrypted_message = []
         for i in range(len(message)):
-            decrypted_message.append(pow(long(message[i]), d, n))
+            encrypted_number = self.convert_from_95imal(message[i])
+            decrypted_message.append(pow(encrypted_number, d, n))
         return decrypted_message
 
     def loops(self, decrypted_message, size):
