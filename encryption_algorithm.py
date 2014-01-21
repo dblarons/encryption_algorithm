@@ -128,9 +128,9 @@ class EncryptMessage(object):
         matrix = numpy.eye(size)
         min_moves = size - 1
         for i in range(min_moves):
-            matrix[i + 1] = matrix[i] + matrix[i + 1]
+            matrix[i + 1] = matrix[i + 1] + matrix[i]
         for i in range(min_moves):
-            matrix[size - i] = matrix[size - i + 1] + matrix[size - i]
+            matrix[min_moves - i - 1] = matrix[min_moves - i] + matrix[min_moves - i - 1]
         for i in range(HILL_STRENGTH):
             a = random.randint(0, size - 1)
             b = random.randint(0, size - 1)
