@@ -1,8 +1,8 @@
 import numpy, random, json
 
-HILL_STRENGTH = 50
 KEY_STRENGTH = 1000000 # Upper end of range for private keys (don't make more than 10000000000)
 MATRIX_SIZE = 15
+HILL_STRENGTH = 22
 MIN_KEY_STRENGTH = 500 # Number of prime numbers in
 
 ''' PrivateKey
@@ -126,6 +126,11 @@ class EncryptMessage(object):
 
     def generate_hill_cipher_one(self, size):
         matrix = numpy.eye(size)
+        min_moves = size - 1
+        for i in range(min_moves):
+            matrix[i + 1] = matrix[i] + matrix[i + 1]
+        for i in range(min_moves):
+            matrix[size - i] = matrix[size - i + 1] + matrix[size - i]
         for i in range(HILL_STRENGTH):
             a = random.randint(0, size - 1)
             b = random.randint(0, size - 1)
