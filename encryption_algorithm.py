@@ -2,7 +2,7 @@ import numpy, random, json
 
 KEY_STRENGTH = 1000000 # Upper end of range for private keys (don't make more than 10000000000)
 MATRIX_SIZE = 15
-HILL_STRENGTH = 22
+HILL_STRENGTH = 40
 MIN_KEY_STRENGTH = 500 # Number of prime numbers in
 
 ''' PrivateKey
