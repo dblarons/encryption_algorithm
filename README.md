@@ -1,6 +1,8 @@
 ## SAGE Encryption Algorithm
 ---
 
+DO NOT USE THIS SOFTWARE AS A CRYPTOGRAPHY SOLUTION. IT IS FOR LEARNING PURPOSES ONLY.
+
 #### Video
 
 This is a video introduction to the SAGE software: https://www.youtube.com/watch?v=K0SIKCPJQi4
@@ -13,7 +15,7 @@ The master branch is a less stable, but more versatile version of the encryption
 
 #### Warning
 
-At this point in time, this encryption algorithm is not intended to be used in any serious, real-world applications. There are serious vulnerabilities in the SAGE encryption algorithm (detailed below). These vulnerabilities have been largely ignored because the point of this project is not secure encryption as much as it is a proof of concept using Hill Ciphers and public key encryption.
+This encryption algorithm is not intended for use in any serious, real-world applications. There are serious vulnerabilities in the SAGE encryption algorithm (detailed below). These vulnerabilities have been ignored because the point of this project is not secure encryption, but rather to learn about encryption that uses Hill Ciphers and public key encryption. We are fully aware of the "Don't roll your own crypto" proverb.
 
 #### Licensing
 
